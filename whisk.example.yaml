@@ -1,0 +1,190 @@
+---
+# This file describes how your project is configured. Any variables of the
+# %NAME or %{NAME} will be expanded with the environment variable of the same
+# name. In addition, the following variables will also be expanded:
+#
+#   %WHISK_PROJECT_ROOT  - The absolute path of the project root
+#
+# Whisk will fail if any undefined variables are encountered
+#
+# The version of this config file. Must be 1
+version: 1
+
+# The location where the user's locally configured cache will be stored
+cache: "%{WHISK_PROJECT_ROOT}/.config.yaml"
+
+defaults:
+  # The default values if the user has never configured before. If any are
+  # omitted, the user *must* specify them the first time they configure. Note
+  # that the default version is not configurable because it defaults to
+  # "default".
+  products: []
+  mode: release
+  site: roaming
+  # Default build directory, or "build" if unspecified
+  build_dir: build
+
+# Shell code fragments that will be inserted into the shell code executed by
+# the initialization script. All are optional. Whisk will set the following
+# extra shell variables which may be used in these fragments:
+#
+#   $WHISK_BUILD_DIR - The absolute path to the user specified build directory
+#   $WHISK_INIT      - This variable will have the value "true" if this is the
+#                     first time the environment is being initialized, and
+#                     "false" if the user is re-configuring
+hooks:
+  # Shell code executed before the version initialization script
+  pre_init: |
+    # placeholder
+
+  # Shell code executed after the version initialization script
+  post_init: |
+    # placeholder
+
+# The version of Yocto that are supported
+versions:
+  # Each version is named here. Any name can be chosen, but the release name
+  # (e.g. zeus, dunfell, gatesgarth), is recommended
+  dunfell:
+    # a short description of the version (optional)
+    description: Yocto 3.1
+
+    # The path to the OE initialization script for this version
+    oeinit: "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/oe-init-build-env"
+
+    # The pyrex configuration for this version. If omitted, pyrex will not be
+    # used
+    pyrex:
+      # The path to the pyrex root for this version. In general, you can share
+      # the same version of pyrex across multiple different versions and change
+      # the config file to pull in the pyrex image that matches one of the
+      # SANITY_TESTED_DISTROS
+      root: "%{WHISK_PROJECT_ROOT}/layers/meta-pyrex"
+
+      # The path to the pyrex configuration file to use for this version
+      conf: "%{WHISK_PROJECT_ROOT}/layers/dunfell/pyrex.ini"
+
+    # The layer collections supported by this version. The order is preserved,
+    # so layers will added to BBLAYERS in the same order as listed here.
+    layers:
+      # The name of the layer collection, as referenced by a product. You
+      # should keep the names of similar layer collections the same across
+      # multiple different Yocto versions, as it makes it easier to migrate a
+      # product to a newer version
+      - name: core
+        # The list of layers in this collection. Note that a layer collection
+        # is allowed to have multiple layers
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/meta"
+
+      - name: mingw
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/layers/dunfell/meta-mingw"
+
+  zeus:
+    description: Yocto 3.0
+
+    oeinit: "%{WHISK_PROJECT_ROOT}/layers/zeus/poky/oe-init-build-env"
+
+    pyrex:
+      root: "%{WHISK_PROJECT_ROOT}/layers/meta-pyrex"
+      conf: "%{WHISK_PROJECT_ROOT}/layers/dunfell/pyrex.ini"
+
+    layers:
+      - name: core
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/layers/zeus/poky/meta"
+
+# The build modes that are supported
+modes:
+  internal:
+    # A short description of the build mode (optional)
+    description: Engineering build for internal development
+
+    # A fragment that will be directly written into 'site.conf' when this mode
+    # is used (optional)
+    conf: |
+      # Mode placeholder
+
+  release:
+    description: Release build for public release
+    conf: |
+      # Mode placeholder
+
+sites:
+  roaming:
+    # A short description of the build site (optional)
+    description: Roaming outside an office
+
+    # A fragment that will be directly written into 'site.conf' when this site
+    # is used (optional)
+    conf: |
+      # Site placeholder
+
+# The core configuration. This defines how the base bitbake configuration (e.g.
+# outside of any multiconfigs) behaves
+core:
+  # The list of layer collections that should be included in the base
+  # configuration. Note that all versions *must* provide a layer collection
+  # with the name of each collection listed here, or else it would be
+  # impossible to use the base configuration (and thus any configuration).
+  layers:
+    - core
+
+  # A fragment that will be directly written into 'site.conf' (optional)
+  conf: |
+    MACHINE ?= "qemux86"
+    DISTRO ?= "poky"
+
+
+# Defines products that can be built
+products:
+  qemux86-64:
+    # A short description of the product. This is what shows up when user asks
+    # for help, so it should try and help the distinguish products,
+    # particularly if you use a lot of codenames (optional)
+    description: A test qemux86-64 product
+
+    # The default version that this product will build with if unspecified, or
+    # if the user specifies the default should be used. The user can force a
+    # product to use a different version if they are feeling adventurous
+    default_version: dunfell
+
+    # The list of layer collections that should be used for this this product
+    layers:
+      - core
+
+    # The list of additional multiconfigs that should be enabled when this
+    # product is configured. The product multiconfig (i.e. "product-$NAME") is
+    # always enabled when the product is included, but you may specify
+    # additional ones to activate when the product is configured (e.g. if the
+    # product has firmware built with a different multiconfig). (optional)
+    multiconfigs: []
+
+    # The list of default build targets that should be built when this product
+    # is configured. Note that you are not restricted to building a target from
+    # any specific multiconfig, so you must use the "mc:..." bitbake syntax to
+    # build from a specific multiconfig. In particular, you will probably want
+    # most of your entries to to be prefixed with "mc:product-$NAME" to make
+    # them build in this products multiconfig (optional)
+    targets:
+      - "mc:product-qemux86-64:core-image-minimal"
+
+    # A fragment that will be directly written into the product multiconfig
+    # (optional)
+    conf: |
+      MACHINE = "qemux86-64"
+      DISTRO = "poky"
+
+  qemuarm:
+    description: A test qemuarm product
+    default_version: dunfell
+    layers:
+      - core
+
+    targets:
+      - mc:product-qemuarm:core-image-minimal
+
+    conf: |
+      MACHINE = "qemuarm"
+      DISTRO = "poky"

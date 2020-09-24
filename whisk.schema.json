@@ -1,0 +1,208 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://www.garmin.com/schemas/whisk.json",
+
+    "type": "object",
+    "properties": {
+        "version": {
+            "type": "number"
+        },
+
+        "cache": {
+            "type": "string"
+        },
+
+        "defaults": {
+            "type": "object",
+            "properties": {
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "site": {
+                    "type": "string"
+                },
+                "build_dir": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "hooks": {
+            "type": "object",
+            "properties": {
+                "pre_init": {
+                    "type": "string"
+                },
+                "post_init": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "versions": {
+            "type": "object",
+            "patternProperties": {
+                "^(?!default$)[a-zA-Z0-9_-]+$": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "oeinit": {
+                            "type": "string"
+                        },
+                        "pyrex": {
+                            "type": "object",
+                            "properties": {
+                                "root": {
+                                    "type": "string"
+                                },
+                                "conf": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "root",
+                                "conf"
+                            ]
+                        },
+                        "layers": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "paths": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "additionalProperties": false,
+                                "required": [
+                                    "name"
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "modes": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9_-]+$": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "conf": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "sites": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9_-]+$": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "conf": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "core": {
+            "type": "object",
+            "properties": {
+                "layers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "conf": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "products": {
+            "type": "object",
+            "patternProperties": {
+                "^(?!core$)[a-zA-Z0-9_-]+$": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "default_version": {
+                            "type": "string"
+                        },
+                        "layers": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "targets": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "multiconfigs": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "conf": {
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                        "default_version"
+                    ]
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false,
+    "required": [
+        "version",
+        "versions"
+    ]
+}

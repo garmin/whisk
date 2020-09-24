@@ -1,0 +1,90 @@
+#! /bin/bash
+#
+# 2020 Garmin Ltd. or its subsidiaries
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+if [ -n "$BASH_SOURCE" ]; then
+	THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+	THIS_SCRIPT=$0
+else
+	THIS_SCRIPT="$(pwd)/init-build-env"
+fi
+
+if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
+    echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'"
+    exit 1
+fi
+
+if [ -z "$WHISK_ROOT" ]; then
+	WHISK_ROOT=$(dirname $(readlink -f $THIS_SCRIPT))
+	if [ -z "$WHISK_ROOT" ]; then
+		WHISK_ROOT="$(pwd)"
+	fi
+fi
+
+if [ -z "$WHISK_PROJECT_ROOT" ]; then
+	WHISK_PROJECT_ROOT="$(readlink -f $(dirname $THIS_SCRIPT))"
+fi
+
+if [ -z "$WHISKCONF" ]; then
+	WHISKCONF="$WHISK_PROJECT_ROOT/whisk.yaml"
+fi
+
+whisk_cleanup() {
+	unset whisk_cleanup WHISK_EXTRA_CONF
+}
+
+configure() {
+	local TEMP_ENV_FILE=$(mktemp -t whisk-env.XXXXXX)
+
+	PIPENV_PIPFILE=$WHISK_ROOT/Pipfile pipenv run -- \
+		$WHISK_ROOT/configure.py \
+			--env $TEMP_ENV_FILE \
+			--conf $WHISKCONF \
+			--root $WHISK_PROJECT_ROOT \
+			$WHISK_EXTRA_CONF \
+			-- "$@"
+	local ERR=$?
+
+	if [ "$WHISK_CAPTURE_ENV" == "-" ]; then
+		cat $TEMP_ENV_FILE
+	elif [ -n "$WHISK_CAPTURE_ENV" ]; then
+		cat $TEMP_ENV_FILE > "$WHISK_CAPTURE_ENV"
+	fi
+
+	if [ $ERR != 0 ]; then
+		rm $TEMP_ENV_FILE
+		return $ERR
+	fi
+
+	. $TEMP_ENV_FILE
+	rm $TEMP_ENV_FILE
+	return 0
+}
+
+PIPENV_PIPFILE=$WHISK_ROOT/Pipfile pipenv sync --bare
+if [ $? -ne 0 ]; then
+	whisk_cleanup
+	return 1
+fi
+
+WHISK_EXTRA_CONF="--init" configure "$@"
+if [ $? -ne 0 ]; then
+	whisk_cleanup
+	return 1
+fi
+
+whisk_cleanup
+# vim: noexpandtab
