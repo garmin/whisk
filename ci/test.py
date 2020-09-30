@@ -537,6 +537,26 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             success=False,
         )
 
+    def test_multiple_products_joined(self):
+        self.assertShellCode(
+            """\
+            . init-build-env --products="test-dunfell test-zeus" --version=dunfell --mode=modeA --site=siteA
+            """,
+            {
+                "WHISK_PRODUCTS": "test-dunfell test-zeus",
+            },
+        )
+
+    def test_multiple_products_split(self):
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-dunfell --product=test-zeus --version=dunfell --mode=modeA --site=siteA
+            """,
+            {
+                "WHISK_PRODUCTS": "test-dunfell test-zeus",
+            },
+        )
+
     def test_defaults(self):
         self.append_conf(
             """\

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import itertools
 import json
 import jsonschema
 import os
@@ -193,12 +194,15 @@ def main():
 
     if user_args.products:
         write = True
-        for p in user_args.products:
+        user_products = sorted(
+            set(itertools.chain(*(a.split() for a in user_args.products)))
+        )
+        for p in user_products:
             if not p in conf.get("products", {}):
                 print("Unknown product '%s'. Please choose from:" % p)
                 print_products(conf, cur_products)
                 return 1
-        cur_products = sorted(set(user_args.products))
+        cur_products = user_products
 
     if user_args.mode:
         write = True
