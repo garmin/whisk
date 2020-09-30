@@ -15,6 +15,8 @@
 # limitations under the License.
 
 import argparse
+import json
+import jsonschema
 import os
 import pathlib
 import string
@@ -137,6 +139,13 @@ def main():
 
     if conf["version"] != 1:
         print("Bad version %r in config file '%s'" % (conf["version"], sys_args.conf))
+        return 1
+
+    try:
+        with (THIS_DIR / "whisk.schema.json").open("r") as f:
+            jsonschema.validate(conf, json.load(f))
+    except jsonschema.ValidationError as e:
+        print("Error validating %s: %s" % (sys_args.conf, e.message))
         return 1
 
     def get_product(name):
