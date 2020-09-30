@@ -44,5 +44,5 @@ except jsonschema.ValidationError as e:
     sys.exit(1)
 HEREDOC
 
-pipenv run -- yamllint -s "$1"
+pipenv run -- yamllint -c "$THIS_DIR/yamllint.yaml" -s "$1"
 
