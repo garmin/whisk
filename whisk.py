@@ -37,49 +37,6 @@ class ConfTemplate(string.Template):
     delimiter = r"%"
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Configure build")
-
-    parser.add_argument("--root", help="Project root", type=pathlib.Path)
-    parser.add_argument("--conf", help="Project configuration file", type=pathlib.Path)
-    parser.add_argument(
-        "--init", action="store_true", help="Run first-time initialization"
-    )
-    parser.add_argument(
-        "--env", help="Path to environment output file", type=pathlib.Path
-    )
-    parser.add_argument("user_args", nargs="*", help="User arguments")
-
-    sys_args = parser.parse_args()
-
-    parser = argparse.ArgumentParser(description="Configure build")
-    parser.add_argument(
-        "--products", action="append", default=[], help="Change build product(s)"
-    )
-    parser.add_argument("--mode", help="Change build mode")
-    parser.add_argument("--site", help="Change build site")
-    parser.add_argument("--version", help="Set Yocto version")
-    parser.add_argument("--build-dir", help="Set build directory")
-    parser.add_argument("--list", action="store_true", help="List options")
-    parser.add_argument(
-        "--write",
-        action="store_true",
-        help="Write out new config files (useful if product configuration has changed)",
-    )
-    parser.add_argument(
-        "--no-config",
-        "-n",
-        action="store_true",
-        help="Ignore cached user configuration",
-    )
-    parser.add_argument(
-        "--quiet", "-q", action="store_true", help="Suppress non-error output"
-    )
-
-    user_args = parser.parse_args(sys_args.user_args)
-    return (sys_args, user_args)
-
-
 def print_items(items, is_current, extra=[]):
     def get_current(i):
         if is_current(i):
@@ -123,8 +80,32 @@ def write_hook(f, conf, hook):
     f.write("\n")
 
 
-def main():
-    sys_args, user_args = parse_args()
+def configure(sys_args):
+    parser = argparse.ArgumentParser(description="Configure build")
+    parser.add_argument(
+        "--products", action="append", default=[], help="Change build product(s)"
+    )
+    parser.add_argument("--mode", help="Change build mode")
+    parser.add_argument("--site", help="Change build site")
+    parser.add_argument("--version", help="Set Yocto version")
+    parser.add_argument("--build-dir", help="Set build directory")
+    parser.add_argument("--list", action="store_true", help="List options")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Write out new config files (useful if product configuration has changed)",
+    )
+    parser.add_argument(
+        "--no-config",
+        "-n",
+        action="store_true",
+        help="Ignore cached user configuration",
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress non-error output"
+    )
+
+    user_args = parser.parse_args(sys_args.user_args)
 
     with sys_args.conf.open("r") as f:
         env = os.environ.copy()
@@ -521,6 +502,34 @@ def main():
             print()
 
     return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Whisk product manager")
+
+    subparser = parser.add_subparsers(dest="command")
+    subparser.required = True
+
+    configure_parser = subparser.add_parser(
+        "configure", help="Configure build environment"
+    )
+
+    configure_parser.add_argument("--root", help="Project root", type=pathlib.Path)
+    configure_parser.add_argument(
+        "--conf", help="Project configuration file", type=pathlib.Path
+    )
+    configure_parser.add_argument(
+        "--init", action="store_true", help="Run first-time initialization"
+    )
+    configure_parser.add_argument(
+        "--env", help="Path to environment output file", type=pathlib.Path
+    )
+    configure_parser.add_argument("user_args", nargs="*", help="User arguments")
+    configure_parser.set_defaults(func=configure)
+
+    args = parser.parse_args()
+
+    return args.func(args)
 
 
 if __name__ == "__main__":

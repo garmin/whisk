@@ -50,7 +50,7 @@ configure() {
 	local TEMP_ENV_FILE=$(mktemp -t whisk-env.XXXXXX)
 
 	PIPENV_PIPFILE=$WHISK_ROOT/Pipfile pipenv run -- \
-		$WHISK_ROOT/whisk.py \
+		$WHISK_ROOT/whisk.py configure \
 			--env $TEMP_ENV_FILE \
 			--conf $WHISKCONF \
 			--root $WHISK_PROJECT_ROOT \
