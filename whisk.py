@@ -29,6 +29,7 @@ import yaml
 tabulate.PRESERVE_WHITESPACE = True
 
 THIS_DIR = pathlib.Path(__file__).parent.absolute()
+SCHEMA_FILE = THIS_DIR / "whisk.schema.json"
 
 CACHE_VERSION = 1
 
@@ -102,7 +103,7 @@ def parse_conf_file(path):
     conf = yaml.load(ConfTemplate(conf_str).substitute(**env), Loader=yaml.Loader)
 
     try:
-        with (THIS_DIR / "whisk.schema.json").open("r") as f:
+        with SCHEMA_FILE.open("r") as f:
             jsonschema.validate(conf, json.load(f))
     except jsonschema.ValidationError as e:
         print("Error validating %s: %s" % (path, e.message))
@@ -525,6 +526,38 @@ def configure(sys_args):
     return 0
 
 
+def validate(args):
+    import yamllint.linter
+    import yamllint.config
+
+    ret = 0
+    try:
+        with args.conf.open("r") as f, SCHEMA_FILE.open("r") as schema:
+            jsonschema.validate(yaml.load(f, Loader=yaml.Loader), json.load(schema))
+    except jsonschema.ValidationError as e:
+        print(e)
+        ret = 1
+
+    config = yamllint.config.YamlLintConfig(
+        textwrap.dedent(
+            """\
+            extends: default
+            rules:
+                # Long lines are fine
+                line-length: disable
+            """
+        )
+    )
+
+    ret = 0
+    with args.conf.open("r") as f:
+        for p in yamllint.linter.run(f, config, str(args.conf)):
+            print("%r" % p)
+            ret = 1
+
+    return ret
+
+
 def main():
     parser = argparse.ArgumentParser(description="Whisk product manager")
 
@@ -546,6 +579,14 @@ def main():
     )
     configure_parser.add_argument("user_args", nargs="*", help="User arguments")
     configure_parser.set_defaults(func=configure)
+
+    validate_parser = subparser.add_parser(
+        "validate", help="Validate configuration file"
+    )
+    validate_parser.add_argument(
+        "conf", help="configuration file to validate", type=pathlib.Path
+    )
+    validate_parser.set_defaults(func=validate)
 
     args = parser.parse_args()
 

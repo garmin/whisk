@@ -119,7 +119,7 @@ class WhiskTests(object):
 class WhiskExampleConfTests(unittest.TestCase):
     def test_validate_example(self):
         p = subprocess.run(
-            [ROOT / "validate", ROOT / "whisk.example.yaml"],
+            [ROOT / "bin" / "whisk", "validate", ROOT / "whisk.example.yaml"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
