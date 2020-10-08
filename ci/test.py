@@ -161,8 +161,12 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
         )
 
     def test_project_root_expansion(self):
+        temp_root = self.project_root / "temp_root"
+        temp_root.mkdir()
+
         self.append_conf(
             """\
+            project_root: temp_root
             hooks:
                 pre_init: |
                     MY_PROJECT_ROOT=%{WHISK_PROJECT_ROOT}
@@ -174,7 +178,8 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             . init-build-env
             """,
             {
-                "MY_PROJECT_ROOT": str(self.project_root.absolute()),
+                "WHISK_PROJECT_ROOT": str(temp_root.absolute()),
+                "MY_PROJECT_ROOT": str(temp_root.absolute()),
             },
         )
 

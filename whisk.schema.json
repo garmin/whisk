@@ -8,6 +8,10 @@
             "type": "number"
         },
 
+        "project_root": {
+            "type": "string"
+        },
+
         "cache": {
             "type": "string"
         },

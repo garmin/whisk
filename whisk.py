@@ -80,6 +80,37 @@ def write_hook(f, conf, hook):
     f.write("\n")
 
 
+def parse_conf_file(path):
+    with path.open("r") as f:
+        conf_str = f.read()
+
+    conf = yaml.load(conf_str, Loader=yaml.Loader)
+
+    if not "version" in conf:
+        print("Config file '%s' missing version" % sys_args.conf)
+        return (None, None)
+
+    if conf["version"] != 1:
+        print("Bad version %r in config file '%s'" % (conf["version"], sys_args.conf))
+        return (None, None)
+
+    project_root = path.parent / conf.get("project_root", ".")
+
+    # Re-parse, expanding variables
+    env = os.environ.copy()
+    env["WHISK_PROJECT_ROOT"] = project_root.absolute()
+    conf = yaml.load(ConfTemplate(conf_str).substitute(**env), Loader=yaml.Loader)
+
+    try:
+        with (THIS_DIR / "whisk.schema.json").open("r") as f:
+            jsonschema.validate(conf, json.load(f))
+    except jsonschema.ValidationError as e:
+        print("Error validating %s: %s" % (path, e.message))
+        return (None, None)
+
+    return (conf, project_root)
+
+
 def configure(sys_args):
     parser = argparse.ArgumentParser(description="Configure build")
     parser.add_argument(
@@ -107,27 +138,8 @@ def configure(sys_args):
 
     user_args = parser.parse_args(sys_args.user_args)
 
-    with sys_args.conf.open("r") as f:
-        env = os.environ.copy()
-        env["WHISK_PROJECT_ROOT"] = sys_args.root.absolute()
-        conf = yaml.load(
-            ConfTemplate(f.read()).substitute(**env),
-            Loader=yaml.Loader,
-        )
-
-    if not "version" in conf:
-        print("Config file '%s' missing version" % sys_args.conf)
-        return 1
-
-    if conf["version"] != 1:
-        print("Bad version %r in config file '%s'" % (conf["version"], sys_args.conf))
-        return 1
-
-    try:
-        with (THIS_DIR / "whisk.schema.json").open("r") as f:
-            jsonschema.validate(conf, json.load(f))
-    except jsonschema.ValidationError as e:
-        print("Error validating %s: %s" % (sys_args.conf, e.message))
+    (conf, project_root) = parse_conf_file(sys_args.conf)
+    if not conf:
         return 1
 
     def get_product(name):
@@ -136,7 +148,7 @@ def configure(sys_args):
             return conf.get("core", {})
         return conf["products"][name]
 
-    cache_path = pathlib.Path(conf.get("cache", sys_args.root / ".config.yaml"))
+    cache_path = pathlib.Path(conf.get("cache", project_root / ".config.yaml"))
     cache = {}
     if not user_args.no_config:
         try:
@@ -308,7 +320,12 @@ def configure(sys_args):
                 f.write('export BITBAKEDIR="%s"\n' % bitbake_dir)
 
             f.write(
-                'export BB_ENV_EXTRAWHITE="${BB_ENV_EXTRAWHITE} WHISK_PROJECT_ROOT WHISK_PRODUCTS WHISK_MODE WHISK_SITE WHISK_ACTUAL_VERSION"\n'
+                textwrap.dedent(
+                    """\
+                    export WHISK_PROJECT_ROOT="{root}"
+                    export BB_ENV_EXTRAWHITE="${{BB_ENV_EXTRAWHITE}} WHISK_PROJECT_ROOT WHISK_PRODUCTS WHISK_MODE WHISK_SITE WHISK_ACTUAL_VERSION"
+                    """
+                ).format(root=project_root.absolute())
             )
 
             if version.get("pyrex"):
@@ -323,7 +340,7 @@ def configure(sys_args):
                         . {version[pyrex][root]}/pyrex-init-build-env $WHISK_BUILD_DIR
                         """
                     ).format(
-                        root=sys_args.root.absolute(),
+                        root=project_root.absolute(),
                         version=version,
                     )
                 )
@@ -514,7 +531,6 @@ def main():
         "configure", help="Configure build environment"
     )
 
-    configure_parser.add_argument("--root", help="Project root", type=pathlib.Path)
     configure_parser.add_argument(
         "--conf", help="Project configuration file", type=pathlib.Path
     )

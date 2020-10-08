@@ -34,12 +34,8 @@ if [ -z "$WHISK_ROOT" ]; then
 	fi
 fi
 
-if [ -z "$WHISK_PROJECT_ROOT" ]; then
-	WHISK_PROJECT_ROOT="$(readlink -f $(dirname $THIS_SCRIPT))"
-fi
-
 if [ -z "$WHISKCONF" ]; then
-	WHISKCONF="$WHISK_PROJECT_ROOT/whisk.yaml"
+	WHISKCONF="$(readlink -f $(dirname $THIS_SCRIPT))/whisk.yaml"
 fi
 
 whisk_cleanup() {
@@ -53,7 +49,6 @@ configure() {
 		$WHISK_ROOT/whisk.py configure \
 			--env $TEMP_ENV_FILE \
 			--conf $WHISKCONF \
-			--root $WHISK_PROJECT_ROOT \
 			$WHISK_EXTRA_CONF \
 			-- "$@"
 	local ERR=$?

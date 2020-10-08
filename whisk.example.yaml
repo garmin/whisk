@@ -10,6 +10,12 @@
 # The version of this config file. Must be 1
 version: 1
 
+# The location of the project root, relative to the parent directory of this
+# configuration file. This value is evaluated before any variable expansion is
+# done.  Defaults to ".", meaning that this config file is in the root of the
+# project
+project_root: .
+
 # The location where the user's locally configured cache will be stored
 cache: "%{WHISK_PROJECT_ROOT}/.config.yaml"
 
