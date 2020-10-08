@@ -324,8 +324,12 @@ def configure(sys_args):
                     """\
                     export WHISK_PROJECT_ROOT="{root}"
                     export BB_ENV_EXTRAWHITE="${{BB_ENV_EXTRAWHITE}} WHISK_PROJECT_ROOT WHISK_PRODUCTS WHISK_MODE WHISK_SITE WHISK_ACTUAL_VERSION"
+                    PATH="{this_dir}/bin:$PATH"
                     """
-                ).format(root=project_root.absolute())
+                ).format(
+                    root=project_root.absolute(),
+                    this_dir=THIS_DIR,
+                )
             )
 
             if version.get("pyrex"):

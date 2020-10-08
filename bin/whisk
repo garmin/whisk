@@ -1,0 +1,52 @@
+#! /usr/bin/env python3
+#
+# 2020 Garmin Ltd. or its subsidiaries
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+import pathlib
+import subprocess
+import sys
+
+WHISK_DIR = pathlib.Path(__file__).parent.parent
+
+env = os.environ.copy()
+env["PIPENV_PIPFILE"] = (WHISK_DIR / "Pipfile").absolute()
+
+# Check if the virtual environment is available. This isn't a perfect check
+# because the environment could be created but not synced, but the user would
+# have to have done this manually because whisk never creates the environment
+# that way.
+if (
+    subprocess.run(
+        ["pipenv", "--venv"],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+    ).returncode
+    != 0
+):
+    subprocess.run(["pipenv", "sync", "--bare"], env=env, check=True)
+
+os.execvpe(
+    "pipenv",
+    [
+        "pipenv",
+        "run",
+        "--",
+        (WHISK_DIR / "whisk.py").absolute(),
+    ]
+    + sys.argv[1:],
+    env,
+)
