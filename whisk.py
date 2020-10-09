@@ -275,7 +275,7 @@ def configure(sys_args):
 
     version = conf["versions"][cur_actual_version]
 
-    cur_layers = {l["name"]: l["paths"] for l in version.get("layers", [])}
+    cur_layers = {l["name"]: l.get("paths", []) for l in version.get("layers", [])}
 
     # Sanity check that all configured products have layers
     for p in ["core"] + cur_products:
@@ -494,7 +494,7 @@ def configure(sys_args):
 
             for l in version.get("layers", []):
                 if l["name"] in requested_layers:
-                    for p in l["paths"]:
+                    for p in l.get("paths", []):
                         f.write('BBLAYERS += "%s"\n' % p)
 
             f.write('BBLAYERS += "%s/meta-whisk"\n\n' % THIS_DIR)
