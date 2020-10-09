@@ -10,6 +10,7 @@ tabulate = "*"
 pyyaml = "*"
 yamllint = "*"
 jsonschema = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.6"

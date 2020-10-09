@@ -47,6 +47,17 @@ hooks:
   post_init: |
     # placeholder
 
+# Commands to run if the user specifies --fetch to fetch layers.
+#
+# Fetch commands are always run with the current working directory set to the
+# project root. Multiple commands may be specified, and each will execute in
+# turn. If any command fails, fetching will stop and the configuration will
+# fail
+fetch:
+  commands:
+    - fetch one
+    - fetch two
+
 # The version of Yocto that are supported
 versions:
   # Each version is named here. Any name can be chosen, but the release name
@@ -57,6 +68,13 @@ versions:
 
     # The path to the OE initialization script for this version
     oeinit: "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/oe-init-build-env"
+
+    # Commands to run if the user specifies --fetch to fetch layers and this
+    # version is active.
+    fetch:
+      commands:
+        - fetch one
+        - fetch two
 
     # The pyrex configuration for this version. If omitted, pyrex will not be
     # used
@@ -83,9 +101,18 @@ versions:
         paths:
           - "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/meta"
 
+        # Commands to run if the user specifies --fetch to fetch layers and
+        # this layer is required by a configured product.
+        fetch:
+          commands:
+            - git submodule update --init layers/dunfell/poky
+
       - name: mingw
         paths:
           - "%{WHISK_PROJECT_ROOT}/layers/dunfell/meta-mingw"
+        fetch:
+          commands:
+            - git submodule update --init layers/dunfell/meta-mingw
 
   zeus:
     description: Yocto 3.0

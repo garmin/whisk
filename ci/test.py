@@ -214,6 +214,173 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
         )
 
 
+class WhiskFetchTests(WhiskTests, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.write_conf(
+            """\
+            version: 1
+            defaults:
+                mode: mode
+                site: site
+
+            fetch:
+              commands:
+                - echo main > %{{WHISK_PROJECT_ROOT}}/fetch
+
+            versions:
+                dunfell:
+                    oeinit: {ROOT}/ci/dummy-init
+                    fetch:
+                      commands:
+                        - echo dunfell >> %{{WHISK_PROJECT_ROOT}}/fetch
+
+                    layers:
+                      - name: core
+                        fetch:
+                            commands:
+                            - echo core >> %{{WHISK_PROJECT_ROOT}}/fetch
+                      - name: A
+                        fetch:
+                            commands:
+                            - echo A >> %{{WHISK_PROJECT_ROOT}}/fetch
+                      - name: test-environment
+                        fetch:
+                            commands:
+                            - pwd >> %{{WHISK_PROJECT_ROOT}}/fetch
+                            - echo ${{WHISK_PROJECT_ROOT}} >> %{{WHISK_PROJECT_ROOT}}/fetch
+                            - echo ${{FOO}} >> %{{WHISK_PROJECT_ROOT}}/fetch
+
+                zeus:
+                    oeinit: {ROOT}/ci/dummy-init
+                    fetch:
+                      commands:
+                        - echo zeus >> %{{WHISK_PROJECT_ROOT}}/fetch
+
+                    layers:
+                      - name: core
+                        fetch:
+                            commands:
+                            - echo core >> %{{WHISK_PROJECT_ROOT}}/fetch
+                      - name: A
+                        fetch:
+                            commands:
+                            - echo A >> %{{WHISK_PROJECT_ROOT}}/fetch
+
+            modes:
+                mode: {{}}
+
+            sites:
+                site: {{}}
+
+            """.format(
+                ROOT=ROOT
+            )
+        )
+
+    def assertFetches(self, code, fetches, **kwargs):
+        self.assertShellCode(code, **kwargs)
+
+        with (self.project_root / "fetch").open("r") as f:
+            lines = [l.rstrip() for l in f.readlines()]
+
+        self.assertEqual(lines, fetches)
+
+    def test_fetch(self):
+        self.append_conf(
+            """\
+            products:
+                test-dunfell:
+                    default_version: dunfell
+
+                test-dunfell-core:
+                    default_version: dunfell
+                    layers:
+                      - core
+
+                test-dunfell-A:
+                    default_version: dunfell
+                    layers:
+                      - A
+
+                test-dunfell-core-A:
+                    default_version: dunfell
+                    layers:
+                      - A
+                      - core
+
+                test-zeus:
+                    default_version: zeus
+
+                test-zeus-core:
+                    default_version: zeus
+                    layers:
+                      - core
+
+                test-zeus-A:
+                    default_version: zeus
+                    layers:
+                      - A
+
+                test-zeus-core-A:
+                    default_version: zeus
+                    layers:
+                      - A
+                      - core
+            """
+        )
+
+        for v in ("dunfell", "zeus"):
+            with self.subTest(v):
+                self.assertFetches(
+                    """\
+                    . init-build-env --product=test-%s --fetch
+                    """
+                    % v,
+                    ["main", v],
+                )
+
+            for l in (("core",), ("A",), ("core", "A")):
+                name = "%s-%s" % (v, "-".join(l))
+                print(name)
+                with self.subTest(name):
+                    self.assertFetches(
+                        """\
+                        . init-build-env --product=test-%s --fetch
+                        """
+                        % name,
+                        ["main", v] + list(l),
+                    )
+
+    def test_fetch_env(self):
+        self.append_conf(
+            """\
+            products:
+                test-environment:
+                    default_version: dunfell
+                    layers:
+                      - test-environment
+            """
+        )
+
+        env = os.environ.copy()
+        env["FOO"] = "BAR"
+
+        self.assertFetches(
+            """
+            . init-build-env --product=test-environment --fetch
+            """,
+            [
+                "main",
+                "dunfell",
+                str(self.project_root),
+                str(self.project_root),
+                "BAR",
+            ],
+            env=env,
+        )
+
+
 class WhiskVersionTests(WhiskTests, unittest.TestCase):
     def setUp(self):
         super().setUp()

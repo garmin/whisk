@@ -159,7 +159,7 @@ A typical project would integrate Whisk with the following steps:
 
 The project is primarily configured through the `whisk.yaml` file, usually
 located in the project root. Extensive documentation on the options and their
-values is available in the [Example configuration][].
+values is available in the [example configuration][].
 
 To help validate your configuration, Whisk includes a `validate` command that
 can be run on your whisk.yaml file to validate it is correctly formatted.
@@ -170,7 +170,7 @@ can be run on your whisk.yaml file to validate it is correctly formatted.
 Whisk supports building your products inside a
 [Pyrex](https://github.com/garmin/pyrex) container as a first-class option. To
 enable this support, generate a Pyrex configuration file and add the `pyrex` section
-to your versions as shown in the [Example configuration][]. When this is
+to your versions as shown in the [example configuration][]. When this is
 enabled, Whisk will automatically setup the correct environment variables to
 use pyrex when invoking your build commands.
 
@@ -256,10 +256,165 @@ per-product `DEPLOY_DIR` variables, because one could simply query what
 Product layer masking requires Yocto 3.2 (gatesgarth) or later, as this is the
 first version to support separate [BBMASK][] per multiconfig.
 
+[Layer Fetching]: #layer-fetching
+## Layer Fetching
+
+Whisk has the ability to automatically fetch the layers required to build a
+given set of products when configuring. This a user to fetch only the required
+subset, instead of being forced to checkout all layers. This can significantly
+cut down on the amount of fetching, particularly since whisk encourages the
+same remote module to be present in the source tree multiple times for multiple
+versions (e.g. you will probably have oe-core or poky present multiple times in
+your source tree; one for each version). This can be particularly help for CI
+builds where the extra fetching wastes computation time.
+
+Fetching is controlled by `fetch` objects in the `whisk.yaml` file. The top
+level, version objects, and layer sets can all have a fetch object, see the
+[example configuration][] for more information.
+
+A detailed example for using fetch commands with `git submodules` will now be
+explained. Other methods of fetching can be used, but whisk fetching pairs
+particularly well with submodules.
+
+The example will focus on an example repository with a `.gitmodules` file that
+looks like this:
+
+```
+[submodule "whisk"]
+    path = whisk
+    branch = master
+    url = https://github.com/garmin/whisk.git
+[submodule "yocto-3.0/zeus"]
+    path = yocto-3.0/poky
+    branch = zeus
+    url = https://git.yoctoproject.org/git/poky
+[submodule "yocto-3.0/meta-mingw"]
+    path = yocto-3.1/meta-mingw
+    branch = zeus
+    url = https://git.yoctoproject.org/git/meta-mingw
+[submodule "yocto-3.1/poky"]
+    path = yocto-3.1/poky
+    branch = dunfell
+    url = https://git.yoctoproject.org/git/poky
+[submodule "yocto-3.1/meta-mingw"]
+    path = yocto-3.1/meta-mingw
+    branch = dunfell
+    url = https://git.yoctoproject.org/git/meta-mingw
+```
+
+And a `whisk.yaml` file that looks like this:
+
+```yaml
+version: 1
+
+defaults:
+  mode: default
+  site: default
+
+versions:
+  dunfell:
+    description: Yocto 3.1
+    oeinit: "%{WHISK_PROJECT_ROOT}/yocto-3.1/poky/oe-init-build-env"
+
+    layers:
+    - name: core
+      paths:
+      - "%{WHISK_PROJECT_ROOT}/yocto-3.1/poky/meta"
+      fetch:
+        commands:
+        - git submodule update --init yocto-3.1/poky
+
+    - name: mingw
+      paths:
+      - "%{WHISK_PROJECT_ROOT}/yocto-3.1/meta-mingw"
+      fetch:
+        commands:
+        - git submodule update --init yocto-3.1/meta-mingw
+
+  zeus:
+    description: Yocto 3.0
+    oeinit: "%{WHISK_PROJECT_ROOT}/yocto-3.0/poky/oe-init-build-env"
+
+    layers:
+    - name: core
+      paths:
+      - "%{WHISK_PROJECT_ROOT}/yocto-3.0/poky/meta"
+      fetch:
+        commands:
+        - git submodule update --init yocto-3.0/poky
+
+    - name: mingw
+      paths:
+      - "%{WHISK_PROJECT_ROOT}/yocto-3.0/meta-mingw"
+      fetch:
+        commands:
+        - git submodule update --init yocto-3.0/meta-mingw
+
+modes:
+  default:
+  desription: Default mode
+
+sites:
+  default:
+  description: Default site
+
+core:
+  layers:
+    - core
+
+  conf: |
+    MACHINE ?= "qemux86-64"
+    DISTRO ?= "poky"
+
+products:
+  albatross:
+    default_verison: dunfell
+    layers:
+    - core
+
+  typhoon:
+    default_version: dunfell
+    layers:
+    - core
+    - mingw
+
+  phoenix:
+    default_version: zeus
+    layers:
+    - core
+
+  eagle:
+    default_version: zeus
+    layers:
+    - core
+    - mingw
+```
+
+Now, when a product is configured with the `--fetch` argument, whisk will
+automatically run `git submodule update --init <LAYER>` for layers the product
+requires, but users who want all layers can still easily fetch everything with
+a simple `git submodule update --init` command. If you wanted to ensure that
+your CI jobs only fetch the minimum number of required layers, you might use a
+script like this:
+
+```shell
+#! /bin/sh
+set -e
+
+# First fetch whisk
+git submodule update --init whisk
+
+# Configure whisk, instructing it to fetch the required product layers
+. init-build-env -n --product=$PRODUCT --fetch
+
+# Build default targets
+bitbake all-targets
+```
+
 [multiconfig]: https://www.yoctoproject.org/docs/3.1/bitbake-user-manual/bitbake-user-manual.html#executing-a-multiple-configuration-build
 [BBMASK]: https://www.yoctoproject.org/docs/3.1/bitbake-user-manual/bitbake-user-manual.html#var-bb-BBMASK
 [TMPDIR]: https://www.yoctoproject.org/docs/3.1/mega-manual/mega-manual.html#var-TMPDIR
 [DEPLOY_DIR]: https://www.yoctoproject.org/docs/3.1/mega-manual/mega-manual.html#var-DEPLOY_DIR
-[Example configuration]: ./whisk.example.yaml
+[example configuration]: ./whisk.example.yaml
 [deploy]: https://www.yoctoproject.org/docs/3.1/mega-manual/mega-manual.html#ref-classes-deploy
 [mcdepends]: https://www.yoctoproject.org/docs/3.1/mega-manual/mega-manual.html#bb-enabling-multiple-configuration-build-dependencies

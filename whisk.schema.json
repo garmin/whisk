@@ -2,6 +2,21 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://www.garmin.com/schemas/whisk.json",
 
+    "definitions": {
+        "fetch": {
+            "type": "object",
+            "properties": {
+                "commands": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+
     "type": "object",
     "properties": {
         "version": {
@@ -51,6 +66,10 @@
             "additionalProperties": false
         },
 
+        "fetch": {
+            "$ref": "#/definitions/fetch"
+        },
+
         "versions": {
             "type": "object",
             "patternProperties": {
@@ -62,6 +81,9 @@
                         },
                         "oeinit": {
                             "type": "string"
+                        },
+                        "fetch": {
+                            "$ref": "#/definitions/fetch"
                         },
                         "pyrex": {
                             "type": "object",
@@ -92,6 +114,9 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "fetch": {
+                                        "$ref": "#/definitions/fetch"
                                     }
                                 },
                                 "additionalProperties": false,

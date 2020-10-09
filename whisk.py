@@ -21,9 +21,11 @@ import jsonschema
 import os
 import pathlib
 import string
+import subprocess
 import sys
 import tabulate
 import textwrap
+import tqdm
 import yaml
 
 tabulate.PRESERVE_WHITESPACE = True
@@ -136,6 +138,7 @@ def configure(sys_args):
     parser.add_argument(
         "--quiet", "-q", action="store_true", help="Suppress non-error output"
     )
+    parser.add_argument("--fetch", action="store_true", help="Fetch required layers")
 
     user_args = parser.parse_args(sys_args.user_args)
 
@@ -308,6 +311,38 @@ def configure(sys_args):
                 )
             )
             return 1
+
+    requested_layers = set()
+    for name in ["core"] + cur_products:
+        requested_layers.update(get_product(name).get("layers", []))
+
+    if user_args.fetch:
+        fetch_commands = []
+        for o in [conf, version] + [
+            l for l in version.get("layers", []) if l["name"] in requested_layers
+        ]:
+            fetch_commands.extend(o.get("fetch", {}).get("commands", []))
+
+        env = os.environ.copy()
+        env["WHISK_PROJECT_ROOT"] = project_root.absolute()
+
+        for c in tqdm.tqdm(
+            fetch_commands,
+            desc="Fetching",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+            disable=user_args.quiet,
+        ):
+            r = subprocess.run(
+                c,
+                shell=True,
+                cwd=project_root,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                env=env,
+            )
+            if r.returncode:
+                print("Fetch command '%s' failed:\n%s" % (c, r.stdout))
+                return 1
 
     with sys_args.env.open("w") as f:
         f.write(
@@ -499,14 +534,9 @@ def configure(sys_args):
                 )
             )
 
-            requested_layers = set()
-
             for name in ["core"] + cur_products:
-                product_layers = get_product(name).get("layers", [])
-                requested_layers.update(product_layers)
-
                 for l, paths in cur_layers.items():
-                    if not l in product_layers:
+                    if not l in get_product(name).get("layers", []):
                         for p in paths:
                             f.write('BBMASK_%s += "%s"\n' % (name, p))
                 f.write("\n")
