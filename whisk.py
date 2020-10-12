@@ -255,21 +255,40 @@ def configure(sys_args):
         return 1
 
     # Set the actual version
-    if sys_args.init:
-        cur_actual_version = None
-
     if cur_version == "default":
+        product_versions = {}
+
         for p in cur_products:
             v = conf["products"][p]["default_version"]
-            if cur_actual_version is None:
-                cur_actual_version = v
-            elif v != cur_actual_version:
+            product_versions.setdefault(v, []).append(p)
+
+        keys = list(product_versions)
+        if len(keys) == 1:
+            if sys_args.init or keys[0] == cur_actual_version:
+                # Environment hasn't been initialized or it's not changing, so
+                # it can be set
+                cur_actual_version = keys[0]
+            else:
                 print(
-                    "{product} is incompatible with other products: {v} != {actual}".format(
-                        product=p, v=v, actual=cur_actual_version
+                    "Build environment is configured to build version '{actual}' and cannot be changed to version '{v}' required to build products: {products}. Please initialize a new environment with `--product='{products}' --version=default`".format(
+                        actual=cur_actual_version,
+                        v=keys[0],
+                        products=" ".join(product_versions[keys[0]]),
                     )
                 )
                 return 1
+        else:
+            print(
+                "Multiple products with different default versions were chosen. They are:"
+            )
+            print(
+                tabulate.tabulate(
+                    [(k, " ".join(v)) for k, v in product_versions.items()],
+                    tablefmt="plain",
+                )
+            )
+            return 1
+
     else:
         cur_actual_version = cur_version
 
