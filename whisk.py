@@ -549,7 +549,7 @@ def configure(sys_args):
 
             f.write('BBLAYERS += "%s/meta-whisk"\n\n' % THIS_DIR)
 
-            f.write("\n")
+            f.write("%s\n" % conf.get("core", {}).get("layerconf", ""))
 
             f.write(
                 textwrap.dedent(

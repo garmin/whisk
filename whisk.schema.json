@@ -179,6 +179,9 @@
                         "type": "string"
                     }
                 },
+                "layerconf": {
+                    "type": "string"
+                },
                 "conf": {
                     "type": "string"
                 }

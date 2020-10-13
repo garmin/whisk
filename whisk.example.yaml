@@ -164,6 +164,10 @@ core:
   layers:
     - core
 
+  # A fragment that will be directly written into 'bblayers.conf' (optional)
+  layerconf: |
+    # placeholder
+
   # A fragment that will be directly written into 'site.conf' (optional)
   conf: |
     MACHINE ?= "qemux86"
