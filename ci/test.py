@@ -342,7 +342,6 @@ class WhiskFetchTests(WhiskTests, unittest.TestCase):
 
             for l in (("core",), ("A",), ("core", "A")):
                 name = "%s-%s" % (v, "-".join(l))
-                print(name)
                 with self.subTest(name):
                     self.assertFetches(
                         """\
