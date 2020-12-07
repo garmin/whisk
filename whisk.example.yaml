@@ -7,8 +7,12 @@
 #
 # Whisk will fail if any undefined variables are encountered
 #
-# The version of this config file. Must be 1
-version: 1
+# The version of this config file. Must be 1 or 2.
+# Version changes:
+#  2: No differences in the config file format. If this version is specified,
+#     whisk will not define DEPLOY_DIR_<PRODUCT> variable aliases, since they
+#     can cause problems if you product name happens to be an override
+version: 2
 
 # The location of the project root, relative to the parent directory of this
 # configuration file. This value is evaluated before any variable expansion is

@@ -197,7 +197,8 @@ In addition, some variables are set for each defined product. In this table
 | Variable | Description |
 |----------|-------------|
 | `WHISK_TARGET_${product}` | The default targets for this product |
-| `DEPLOY_DIR_${product}` | The [DEPLOY_DIR][] for this product (see [Sharing Files Between Products][]) |
+| `WHISK_DEPLOY_DIR_${product}` | The [DEPLOY_DIR][] for this product (see [Sharing Files Between Products][]) |
+| `DEPLOY_DIR_${product}` | *Deprecated* Alias for `WHISK_DEPLOY_DIR_${product}`, only available when config file version is `1`. New products should not use this variable as it can cause problems with overrides. |
 
 Finally, some variables are also set in the shell environment when the hook
 scripts are run. These include `WHISK_PROJECT_ROOT`, `WHISK_PRODUCTS`,
@@ -220,9 +221,9 @@ multiconfig should [deploy][] the files it wants to share from a given recipe.
 Then, another multiconfig can [mcdepends][] on that source recipes `do_deploy`
 task and pull the files out of the source multiconfigs [DEPLOY_DIR][]. However,
 in order for this to work, the `DEPLOY_DIR` of each source multiconfig must be
-at a known location. To aid in this discovery, Whisk creates a `DEPLOY_DIR`
-variable for each defined product, so that all products can easily reference
-each others deployed files.
+at a known location. To aid in this discovery, Whisk creates a
+`WHISK_DEPLOY_DIR` variable for each defined product, so that all products can
+easily reference each others deployed files.
 
 For example, assume we have two products, `source` and `dest`. `source` has a
 recipe called "hello.bb" that contains:
@@ -237,7 +238,7 @@ recipe called "hello.bb" that contains:
 `dest` wants to bring in this file in another recipe, so it does:
 
     do_install() {
-        cp ${DEPLOY_DIR_source}/hello.txt ${D}/hello_source.txt
+        cp ${WHISK_DEPLOY_DIR_source}/hello.txt ${D}/hello_source.txt
     }
     do_install[mcdepends] = "mc:source:dest:hello:do_deploy"
 
@@ -247,7 +248,7 @@ been configured by the user, which Whisk doesn't check.
 
 *As of this writing, it's not possible to query another multiconfigs variables,
 although it's been discussed. This would eliminate the need for publishing the
-per-product `DEPLOY_DIR` variables, because one could simply query what
+per-product `WHISK_DEPLOY_DIR` variables, because one could simply query what
 `DEPLOY_DIR` is set to in the source multiconfig*
 
 [Product Layer Masking]: #product-layer-masking

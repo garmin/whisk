@@ -134,7 +134,7 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
 
         self.write_conf(
             """
-            version: 1
+            version: 2
             defaults:
                 products:
                 - test-dunfell
@@ -219,7 +219,7 @@ class WhiskFetchTests(WhiskTests, unittest.TestCase):
         super().setUp()
         self.write_conf(
             """\
-            version: 1
+            version: 2
             defaults:
                 mode: mode
                 site: site
@@ -385,7 +385,7 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
         super().setUp()
         self.write_conf(
             """\
-            version: 1
+            version: 2
             defaults:
                 mode: mode
                 site: site
@@ -657,7 +657,7 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
         super().setUp()
         self.write_conf(
             """\
-            version: 1
+            version: 2
 
             versions:
                 dunfell:

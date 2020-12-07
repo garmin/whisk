@@ -93,8 +93,8 @@ def parse_conf_file(path):
         print("Config file '%s' missing version" % sys_args.conf)
         return (None, None)
 
-    if conf["version"] != 1:
-        print("Bad version %r in config file '%s'" % (conf["version"], sys_args.conf))
+    if conf["version"] < 1 or conf["version"] > 2:
+        print("Bad version %r in config file '%s'" % (conf["version"], path))
         return (None, None)
 
     project_root = path.parent / conf.get("project_root", ".")
@@ -441,6 +441,29 @@ def configure(sys_args):
             f.write(conf["modes"][cur_mode].get("conf", ""))
             f.write("\n")
 
+            if conf["version"] < 2:
+                f.write(
+                    textwrap.dedent(
+                        """\
+                        DEPLOY_DIR_BASE ?= "${TOPDIR}/deploy/${WHISK_MODE}/${WHISK_ACTUAL_VERSION}"
+                        WHISK_DEPLOY_DIR_BASE ?= "${DEPLOY_DIR_BASE}"
+
+                        WHISK_DEPLOY_DIR_core = "${WHISK_DEPLOY_DIR_BASE}/core"
+                        DEPLOY_DIR_core = "${WHISK_DEPLOY_DIR_core}"
+                        """
+                    )
+                )
+            else:
+                f.write(
+                    textwrap.dedent(
+                        """\
+                        WHISK_DEPLOY_DIR_BASE ?= "${TOPDIR}/deploy/${WHISK_MODE}/${WHISK_ACTUAL_VERSION}"
+
+                        WHISK_DEPLOY_DIR_core = "${WHISK_DEPLOY_DIR_BASE}/core"
+                        """
+                    )
+                )
+
             f.write(
                 textwrap.dedent(
                     """\
@@ -450,15 +473,12 @@ def configure(sys_args):
 
                     # Set TMPDIR to a version specific location
                     TMPDIR_BASE ?= "${TOPDIR}/tmp/${WHISK_MODE}/${WHISK_ACTUAL_VERSION}"
-                    DEPLOY_DIR_BASE ?= "${TOPDIR}/deploy/${WHISK_MODE}/${WHISK_ACTUAL_VERSION}"
 
                     TMPDIR = "${TMPDIR_BASE}/${WHISK_PRODUCT}"
 
                     # Set the deploy directory to output to a well-known location
-                    DEPLOY_DIR = "${DEPLOY_DIR_${WHISK_PRODUCT}}"
+                    DEPLOY_DIR = "${WHISK_DEPLOY_DIR_${WHISK_PRODUCT}}"
                     DEPLOY_DIR_IMAGE = "${DEPLOY_DIR}/images"
-
-                    DEPLOY_DIR_core = "${DEPLOY_DIR_BASE}/core"
                     """
                 )
             )
@@ -468,10 +488,13 @@ def configure(sys_args):
             )
 
             for p in sorted(conf["products"]):
+                if conf["version"] < 2:
+                    f.write('DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_{p}}}"\n'.format(p=p))
+
                 f.write(
                     textwrap.dedent(
                         """\
-                        DEPLOY_DIR_{p} = "${{DEPLOY_DIR_BASE}}/{p}"
+                        WHISK_DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_BASE}}/{p}"
                         WHISK_TARGETS_{p} = "{targets}"
                         """
                     ).format(
