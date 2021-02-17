@@ -12,5 +12,3 @@ yamllint = "*"
 jsonschema = "*"
 tqdm = "*"
 
-[requires]
-python_version = "3"
