@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/garmin/whisk.svg?branch=master)](https://travis-ci.com/garmin/whisk)
+[![Build Status](https://github.com/garmin/whisk/workflows/build/badge.svg?branch=master&event=push)](https://github.com/garmin/whisk/actions?query=workflow%3Abuild+event%3Apush+branch%3Amaster)
 
 # Whisk
 <img src="./images/whisk.svg" width="250" height="250">
