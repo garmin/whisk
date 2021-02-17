@@ -489,7 +489,9 @@ def configure(sys_args):
 
             for p in sorted(conf["products"]):
                 if conf["version"] < 2:
-                    f.write('DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_{p}}}"\n'.format(p=p))
+                    f.write(
+                        'DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_{p}}}"\n'.format(p=p)
+                    )
 
                 f.write(
                     textwrap.dedent(
