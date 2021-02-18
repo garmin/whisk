@@ -128,6 +128,32 @@ class WhiskExampleConfTests(unittest.TestCase):
         )
 
 
+class WhiskEnvSetupTests(unittest.TestCase):
+    def test_lock_setup(self):
+        lock_file = ROOT / "Pipfile.lock"
+
+        subprocess.run(
+            [ROOT / "bin" / "whiskpip", "--rm"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        try:
+            os.unlink(lock_file)
+        except FileNotFoundError:
+            pass
+
+        p = subprocess.run(
+            [ROOT / "bin" / "whisk", "--help"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        self.assertEqual(
+            p.returncode, 0, "Command failed with:\n%s" % p.stdout.decode("utf-8")
+        )
+
+        self.assertTrue(lock_file.exists(), "Lock file %s not created!" % lock_file)
+
+
 class WhiskConfParseTests(WhiskTests, unittest.TestCase):
     def setUp(self):
         super().setUp()
