@@ -129,7 +129,7 @@ class WhiskExampleConfTests(unittest.TestCase):
 
 
 class WhiskEnvSetupTests(unittest.TestCase):
-    def test_lock_setup(self):
+    def test_lock_setup_helper(self):
         lock_file = ROOT / "Pipfile.lock"
 
         subprocess.run(
@@ -185,6 +185,26 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
                 ROOT=ROOT
             )
         )
+
+    def test_lock_setup_init_env(self):
+        lock_file = ROOT / "Pipfile.lock"
+
+        subprocess.run(
+            [ROOT / "bin" / "whiskpip", "--rm"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        try:
+            os.unlink(lock_file)
+        except FileNotFoundError:
+            pass
+
+        self.assertShellCode(
+            """
+            . init-build-env
+            """
+        )
+        self.assertTrue(lock_file.exists(), "Lock file %s not created!" % lock_file)
 
     def test_project_root_expansion(self):
         temp_root = self.project_root / "temp_root"

@@ -45,8 +45,7 @@ whisk_cleanup() {
 configure() {
 	local TEMP_ENV_FILE=$(mktemp -t whisk-env.XXXXXX)
 
-	PIPENV_PIPFILE=$WHISK_ROOT/Pipfile pipenv run -- \
-		$WHISK_ROOT/whisk.py configure \
+	$WHISK_ROOT/bin/whisk configure \
 			--env $TEMP_ENV_FILE \
 			--conf $WHISKCONF \
 			$WHISK_EXTRA_CONF \
@@ -68,12 +67,6 @@ configure() {
 	rm $TEMP_ENV_FILE
 	return 0
 }
-
-PIPENV_PIPFILE=$WHISK_ROOT/Pipfile pipenv sync --bare
-if [ $? -ne 0 ]; then
-	whisk_cleanup
-	return 1
-fi
 
 WHISK_EXTRA_CONF="--init" configure "$@"
 if [ $? -ne 0 ]; then
