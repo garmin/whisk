@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /bin/sh
 #
 # 2020 Garmin Ltd. or its subsidiaries
 #
@@ -14,11 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import pathlib
-import sys
+set -eu
 
-env = os.environ.copy()
-env["PIPENV_PIPFILE"] = (pathlib.Path(__file__).parent.parent / "Pipfile").absolute()
+THIS_DIR="$(dirname $0)"
+TOP_DIR="$THIS_DIR/.."
+VENV_DIR="$TOP_DIR/venv"
 
-os.execvpe("pipenv", ["pipenv"] + sys.argv[1:], env)
+$TOP_DIR/setup-venv
+
+set +eu
+if [ -n "$1" ]; then
+    . "$VENV_DIR/bin/activate"
+    exec "$@"
+fi
+

@@ -15,7 +15,6 @@ jobs:
 
       - name: Install python packages
         run: |
-          python3 -m pip install --upgrade pip
           pip3 install black
 
       - name: Run black
@@ -45,13 +44,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install \
-            pipenv \
-            pyyaml
+          pip install pyyaml
 
       - name: Prepare environment
         run: |
-          pipenv install --python=${{ matrix.python-version }}
+          ./setup-venv
 
       - name: Test
         run: |
