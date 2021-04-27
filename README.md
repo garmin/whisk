@@ -34,9 +34,9 @@ OpenEmbedded and the Yocto project. The key features are:
 
 Whisk is primarily written in Python, with a small initialization shell script
 to setup the build environment. The Python code runs under
-[Pipenv](https://pypi.org/project/pipenv/) and the initialization script will
-use it to automatically install the required dependencies. See the Pipenv
-documentation for installation instructions.
+[virtualenv](https://virtualenv.pypa.io/en/latest/) and the initialization
+script will use it to automatically install the required dependencies. See the
+virtualenv documentation for installation instructions.
 
 [Using Whisk]: #using-whisk
 ## Using Whisk
