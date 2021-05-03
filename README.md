@@ -261,13 +261,14 @@ first version to support separate [BBMASK][] per multiconfig.
 ## Layer Fetching
 
 Whisk has the ability to automatically fetch the layers required to build a
-given set of products when configuring. This a user to fetch only the required
-subset, instead of being forced to checkout all layers. This can significantly
-cut down on the amount of fetching, particularly since whisk encourages the
-same remote module to be present in the source tree multiple times for multiple
-versions (e.g. you will probably have oe-core or poky present multiple times in
-your source tree; one for each version). This can be particularly help for CI
-builds where the extra fetching wastes computation time.
+given set of products when configuring. This allows a user to fetch only the
+required subset, instead of being forced to checkout all layers. This can
+significantly cut down on the amount of fetching, particularly since whisk
+encourages the same remote module to be present in the source tree multiple
+times for multiple versions (e.g. you will probably have oe-core or poky
+present multiple times in your source tree; one for each version). This can be
+particularly help for CI builds where the extra fetching wastes computation
+time.
 
 Fetching is controlled by `fetch` objects in the `whisk.yaml` file. The top
 level, version objects, and layer sets can all have a fetch object, see the
