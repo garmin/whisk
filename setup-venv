@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -eu
+
 THIS_DIR="$(dirname $0)"
 VENV_DIR="$THIS_DIR/venv"
 
@@ -22,7 +24,6 @@ cd $THIS_DIR
 REV="$(git rev-parse HEAD):$(shasum "requirements.txt")"
 
 if [ ! -e "$VENV_DIR/rev.txt" ] || [ "$(cat $VENV_DIR/rev.txt)" != "$REV" ]; then
-    set +eu
     python3 -m venv "$VENV_DIR"
     . "$VENV_DIR/bin/activate"
     pip install -r requirements.txt
