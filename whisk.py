@@ -519,7 +519,7 @@ def configure(sys_args):
                     BBMULTICONFIG = "{multiconfigs}"
                     BBMASK += "${{BBMASK_${{WHISK_PRODUCT}}}}"
 
-                    BB_HASHBASE_WHITELIST_append = " WHISK_PROJECT_ROOT"
+                    BB_HASHBASE_WHITELIST += "WHISK_PROJECT_ROOT"
                     """
                 ).format(multiconfigs=" ".join(sorted(multiconfigs)))
             )
