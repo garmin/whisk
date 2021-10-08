@@ -102,7 +102,31 @@ def parse_conf_file(path):
     # Re-parse, expanding variables
     env = os.environ.copy()
     env["WHISK_PROJECT_ROOT"] = project_root.absolute()
-    conf = yaml.load(ConfTemplate(conf_str).substitute(**env), Loader=yaml.Loader)
+    conf = yaml.load(conf_str, Loader=yaml.Loader)
+
+    # Recursively do environment substitution on all strings
+    def substitute(item):
+
+        if isinstance(item, dict):
+            for k in item:
+                item[k] = substitute(item[k])
+            return item
+        elif isinstance(item, list):
+            for i in range(0, len(item)):
+                item[i] = substitute(item[i])
+            return item
+        elif isinstance(item, str):
+            # Throws a KeyError (handled by the caller) if the string contains
+            # an attempted dereference to an undefined environment variable.
+            return ConfTemplate(item).substitute(**env)
+        else:
+            return item
+
+    try:
+        conf = substitute(conf)
+    except KeyError as e:
+        print("Couldn't substitute all environment variables (%s is undefined)." % e)
+        return (None, None)
 
     try:
         with SCHEMA_FILE.open("r") as f:
@@ -606,11 +630,15 @@ def validate(args):
     import yamllint.config
 
     ret = 0
+
     try:
         with args.conf.open("r") as f, SCHEMA_FILE.open("r") as schema:
             jsonschema.validate(yaml.load(f, Loader=yaml.Loader), json.load(schema))
     except jsonschema.ValidationError as e:
         print(e)
+        ret = 1
+
+    if parse_conf_file(args.conf) == (None, None):
         ret = 1
 
     config = yamllint.config.YamlLintConfig(
