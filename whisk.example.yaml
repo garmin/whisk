@@ -99,7 +99,7 @@ versions:
       # should keep the names of similar layer collections the same across
       # multiple different Yocto versions, as it makes it easier to migrate a
       # product to a newer version
-      - name: core
+      - name: oe-core
         # The list of layers in this collection. Note that a layer collection
         # is allowed to have multiple layers
         paths:
@@ -128,7 +128,7 @@ versions:
       conf: "%{WHISK_PROJECT_ROOT}/layers/dunfell/pyrex.ini"
 
     layers:
-      - name: core
+      - name: oe-core
         paths:
           - "%{WHISK_PROJECT_ROOT}/layers/zeus/poky/meta"
 
@@ -166,7 +166,7 @@ core:
   # with the name of each collection listed here, or else it would be
   # impossible to use the base configuration (and thus any configuration).
   layers:
-    - core
+    - oe-core
 
   # A fragment that will be directly written into 'bblayers.conf' (optional)
   layerconf: |
@@ -193,7 +193,7 @@ products:
 
     # The list of layer collections that should be used for this this product
     layers:
-      - core
+      - oe-core
 
     # The list of additional multiconfigs that should be enabled when this
     # product is configured. The product multiconfig (i.e. "product-$NAME") is
@@ -221,7 +221,7 @@ products:
     description: A test qemuarm product
     default_version: dunfell
     layers:
-      - core
+      - oe-core
 
     targets:
       - mc:product-qemuarm:core-image-minimal
