@@ -148,8 +148,9 @@ A typical project would integrate Whisk with the following steps:
    source)
 2. Link the whisk [init-build-env script](./init-build-env) into the project
    root, for example with the command:
-
-    ln -s whisk/init-build-env ./init-build-env
+```sh
+ln -s whisk/init-build-env ./init-build-env
+```
 
 3. Write a `whisk.yaml` file in the project root along side the
    `init-build-env` symlink. See [Project Configuration][]
