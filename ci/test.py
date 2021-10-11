@@ -38,6 +38,10 @@ class WhiskTests(object):
         cleanup_project()
         self.project_root.mkdir(parents=True)
 
+        oldcwd = os.getcwd()
+        os.chdir(self.project_root)
+        self.addCleanup(os.chdir, oldcwd)
+
         os.symlink(ROOT / "init-build-env", self.project_root / "init-build-env")
 
         self.conf_file = self.project_root / "whisk.yaml"
@@ -125,6 +129,28 @@ class WhiskExampleConfTests(unittest.TestCase):
         )
         self.assertEqual(
             p.returncode, 0, "Validation failed with:\n%s" % p.stdout.decode("utf-8")
+        )
+
+
+class WhiskCommandTests(WhiskTests, unittest.TestCase):
+    def test_relative_invocation(self):
+        p = subprocess.run(
+            [os.path.relpath(ROOT / "bin" / "whisk", self.project_root), "--help"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        self.assertEqual(
+            p.returncode, 0, "Unable to invoke whisk:\n%s" % p.stdout.decode("utf-8")
+        )
+
+    def test_absolute_invocation(self):
+        p = subprocess.run(
+            [ROOT / "bin" / "whisk", "--help"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        self.assertEqual(
+            p.returncode, 0, "Unable to invoke whisk:\n%s" % p.stdout.decode("utf-8")
         )
 
 
