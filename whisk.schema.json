@@ -213,6 +213,9 @@
                                 "type": "string"
                             }
                         },
+                        "multiconfig_enabled": {
+                            "type": "boolean"
+                        },
                         "multiconfigs": {
                             "type": "array",
                             "items": {

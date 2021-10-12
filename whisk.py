@@ -323,6 +323,33 @@ def configure(sys_args):
 
     cur_layers = {l["name"]: l.get("paths", []) for l in version.get("layers", [])}
 
+    using_multiconfig = True
+
+    # Sanity check that if any selected product does not support multiconfig,
+    # it is the only selected product.
+    for p in cur_products:
+
+        if not conf["products"][p].get("multiconfig_enabled", True):
+
+            using_multiconfig = False
+
+            if len(cur_products) > 1:
+                print(
+                    "Product '{product}' does not support multiconfig, but more than one product is chosen.".format(
+                        product=p
+                    )
+                )
+                return 1
+
+            multiconfigs = conf["products"][p].get("multiconfigs", [])
+            if len(multiconfigs) > 0:
+                print(
+                    "Product '{product}' does not support multiconfig, but its 'multiconfig' attribute has some elements: {multiconfigs}.".format(
+                        product=p, multiconfigs=multiconfigs
+                    )
+                )
+                return 1
+
     # Sanity check that all configured products have layers
     for p in ["core"] + cur_products:
         missing = set(
@@ -533,23 +560,56 @@ def configure(sys_args):
 
             f.write("\n")
 
-            multiconfigs = set("product-%s" % p for p in cur_products)
-            for p in cur_products:
-                multiconfigs |= set(conf["products"][p].get("multiconfigs", []))
+            # Only set up Bitbake multiconfig if the selected Whisk products
+            # support it.
+            if using_multiconfig:
+
+                multiconfigs = set("product-%s" % p for p in cur_products)
+                for p in cur_products:
+                    multiconfigs |= set(conf["products"][p].get("multiconfigs", []))
+
+                f.write(
+                    textwrap.dedent(
+                        """\
+                        BBMULTICONFIG = "{multiconfigs}"
+                        """
+                    ).format(multiconfigs=" ".join(sorted(multiconfigs)))
+                )
 
             f.write(
                 textwrap.dedent(
                     """\
-                    BBMULTICONFIG = "{multiconfigs}"
-                    BBMASK += "${{BBMASK_${{WHISK_PRODUCT}}}}"
+                    BBMASK += "${BBMASK_${WHISK_PRODUCT}}"
 
                     BB_HASHBASE_WHITELIST_append = " WHISK_PROJECT_ROOT"
                     """
-                ).format(multiconfigs=" ".join(sorted(multiconfigs)))
+                )
             )
 
             f.write(conf.get("core", {}).get("conf", ""))
             f.write("\n")
+
+            # If the selected whisk product is not using multiconfig, then
+            # force all the configuration bits Whisk would normally assign
+            # to the product MC, into the base conf.
+            #
+            # Do this by forcibly injecting the product-<name>.conf file
+            # in Whisk's conf/multiconfig directory, at the very bottom
+            # of site.conf.
+            if not using_multiconfig:
+
+                assert len(cur_products) == 1
+
+                f.write(
+                    textwrap.dedent(
+                        """\
+                        # Multiconfig not enabled. Insert all product-
+                        # specific info into base configuration.
+                        require conf/multiconfig/product-{product}.conf
+                        """
+                    ).format(product=cur_products[0])
+                )
+                f.write("\n")
 
         mc_dir = build_dir / "whisk" / "conf" / "multiconfig"
         mc_dir.mkdir(parents=True, exist_ok=True)

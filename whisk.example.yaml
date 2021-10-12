@@ -195,11 +195,19 @@ products:
     layers:
       - oe-core
 
+    # Indicates whether the generated Yocto configuration should use a
+    # traditional layout based only on local.conf/site.conf, or a configuration
+    # based on multiconfig. Default value is true.
+    multiconfig_enabled: true
+
     # The list of additional multiconfigs that should be enabled when this
     # product is configured. The product multiconfig (i.e. "product-$NAME") is
     # always enabled when the product is included, but you may specify
     # additional ones to activate when the product is configured (e.g. if the
     # product has firmware built with a different multiconfig). (optional)
+    #
+    # This list must not have any elements if multiconfig_enabled is set to
+    # false.
     multiconfigs: []
 
     # The list of default build targets that should be built when this product
@@ -225,6 +233,21 @@ products:
 
     targets:
       - mc:product-qemuarm:core-image-minimal
+
+    conf: |
+      MACHINE = "qemuarm"
+      DISTRO = "poky"
+
+  qemuarm-without-multiconfig:
+    description: A test qemuarm product, built without using multiconfig
+    default_version: dunfell
+    layers:
+      - oe-core
+
+    multiconfig_enabled: false
+
+    targets:
+      - core-image-minimal
 
     conf: |
       MACHINE = "qemuarm"
