@@ -848,5 +848,104 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
         )
 
 
+class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.write_conf(
+            """\
+            version: 2
+
+            versions:
+                dunfell:
+                    oeinit: {ROOT}/ci/dummy-init
+
+            products:
+
+                test-non-mc1:
+                    default_version: dunfell
+                    multiconfig_enabled: false
+
+                test-non-mc2:
+                    default_version: dunfell
+                    multiconfig_enabled: false
+
+                test-non-mc3:
+                    default_version: dunfell
+                    multiconfig_enabled: false
+                    multiconfigs: ["test-mc1", "test-mc2"]
+
+                test-mc1:
+                    default_version: dunfell
+                    multiconfig_enabled: true
+
+                test-mc2:
+                    default_version: dunfell
+                    # multiconfig_enabled is true by default
+
+            modes:
+                modeA: {{}}
+
+            sites:
+                siteA: {{}}
+
+            defaults:
+                mode: modeA
+                site: siteA
+                products:
+                - test-non-mc1
+
+            """.format(
+                ROOT=ROOT
+            )
+        )
+
+    def test_single_non_multiconfig_product(self):
+        """
+        Using a single non-multiconfig product is okay.
+        """
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-non-mc1
+            """,
+            success=True,
+        )
+
+    def test_multiple_non_multiconfig_products(self):
+        """
+        Attempting to use two non-multiconfig products at the same time
+        should fail.
+        """
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-non-mc1 --product=test-non-mc2
+            """,
+            success=False,
+        )
+
+    def test_multiple_multiconfig_products(self):
+        """
+        Attempting to use any multiconfig product in conjunction with a
+        non-multiconfig product should fail.
+        """
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-mc1 --product=test-mc2
+            """,
+            success=True,
+        )
+
+    def test_non_multiconfig_product_with_other_multiconfigs_enabled(self):
+        """
+        Attempting to enable additional multiconfigs which should implicitly be
+        enabled when a non-multiconfig product is selected, should fail.
+        """
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-non-mc3
+            """,
+            success=False,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
