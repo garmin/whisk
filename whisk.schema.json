@@ -115,6 +115,12 @@
                                             "type": "string"
                                         }
                                     },
+                                    "bbmask": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
                                     "fetch": {
                                         "$ref": "#/definitions/fetch"
                                     }

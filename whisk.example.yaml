@@ -111,6 +111,15 @@ versions:
           commands:
             - git submodule update --init layers/dunfell/poky
 
+        # A list of individual strings which should be inserted into BBMASK
+        # for any product which puts this layer collection's name into its
+        # layers list.
+        #
+        # Customarily, each element in this list would be expected to be
+        # phrased starting from the project root.
+        bbmask:
+          - "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/meta-poky/recipes-core/tiny-init"
+
       - name: mingw
         paths:
           - "%{WHISK_PROJECT_ROOT}/layers/dunfell/meta-mingw"
