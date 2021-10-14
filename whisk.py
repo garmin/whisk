@@ -321,7 +321,12 @@ def configure(sys_args):
 
     version = conf["versions"][cur_actual_version]
 
-    cur_layers = {l["name"]: l.get("paths", []) for l in version.get("layers", [])}
+    cur_layers_paths = {
+        l["name"]: l.get("paths", []) for l in version.get("layers", [])
+    }
+    cur_layers_bbmasks = {
+        l["name"]: l.get("bbmask", []) for l in version.get("layers", [])
+    }
 
     using_multiconfig = True
 
@@ -353,7 +358,7 @@ def configure(sys_args):
     # Sanity check that all configured products have layers
     for p in ["core"] + cur_products:
         missing = set(
-            l for l in get_product(p).get("layers", []) if not l in cur_layers
+            l for l in get_product(p).get("layers", []) if not l in cur_layers_paths
         )
         if missing:
             print(
@@ -645,10 +650,14 @@ def configure(sys_args):
             )
 
             for name in ["core"] + cur_products:
-                for l, paths in cur_layers.items():
+                for l, paths in cur_layers_paths.items():
                     if not l in get_product(name).get("layers", []):
                         for p in paths:
                             f.write('BBMASK_%s += "%s"\n' % (name, p))
+                for l, masks in cur_layers_bbmasks.items():
+                    if l in get_product(name).get("layers", []):
+                        for m in masks:
+                            f.write('BBMASK_%s += "%s"\n' % (name, m))
                 f.write("\n")
 
             for l in version.get("layers", []):

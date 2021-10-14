@@ -947,5 +947,131 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
         )
 
 
+class WhiskBbmaskTests(WhiskTests, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.write_conf(
+            """\
+            version: 2
+
+            versions:
+                dunfell:
+                    oeinit: {ROOT}/ci/dummy-init
+
+                    layers:
+
+                      - name: layer1
+                        paths:
+                        - "%{{WHISK_PROJECT_ROOT}}/layers/meta-layer1"
+
+                      - name: layer2
+                        paths:
+                        - "%{{WHISK_PROJECT_ROOT}}/layers/meta-layer2"
+                        bbmask:
+                        - "%{{WHISK_PROJECT_ROOT}}/layers/meta-layer2/recipes-bad/bad.bb"
+
+            products:
+
+                using-collection1:
+                    default_version: dunfell
+                    layers:
+                      - layer1
+
+                using-collection2:
+                    default_version: dunfell
+                    layers:
+                      - layer2
+
+            modes:
+                modeA: {{}}
+
+            sites:
+                siteA: {{}}
+
+            defaults:
+                mode: modeA
+                site: siteA
+                products:
+                - using-collection1
+
+            """.format(
+                ROOT=ROOT
+            )
+        )
+
+    def readBbconfLines(self):
+        with open(
+            os.path.join(self.project_root, "build", "conf", "bblayers.conf"), "r"
+        ) as bblayers_file:
+            return bblayers_file.readlines()
+
+    def assertInBbconf(self, line):
+        self.assertIn(line, self.readBbconfLines())
+
+    def assertNotInBbconf(self, line):
+        self.assertNotIn(line, self.readBbconfLines())
+
+    def test_layer_bbmask(self):
+        # Check that the basic formulation of per-product masks for layer
+        # collections is working.
+        self.assertShellCode(
+            """\
+            . init-build-env --product=using-collection1 --product=using-collection2
+            """,
+            success=True,
+        )
+
+        self.assertInBbconf(
+            'BBMASK_using-collection1 += "{PROJECT_ROOT}/layers/meta-layer2"\n'.format(
+                PROJECT_ROOT=self.project_root
+            )
+        )
+        self.assertInBbconf(
+            'BBMASK_using-collection2 += "{PROJECT_ROOT}/layers/meta-layer1"\n'.format(
+                PROJECT_ROOT=self.project_root
+            )
+        )
+        self.assertNotInBbconf(
+            'BBMASK_using-collection1 += "{PROJECT_ROOT}/layers/meta-layer1"\n'.format(
+                PROJECT_ROOT=self.project_root
+            )
+        )
+        self.assertNotInBbconf(
+            'BBMASK_using-collection2 += "{PROJECT_ROOT}/layers/meta-layer2"\n'.format(
+                PROJECT_ROOT=self.project_root
+            )
+        )
+
+    def test_active_layer_collection_bbmask(self):
+        # Check that laye-specific bbmasks are applied on the product using the layers.
+        self.assertShellCode(
+            """\
+            . init-build-env --product=using-collection1 --product=using-collection2
+            """,
+            success=True,
+        )
+
+        self.assertInBbconf(
+            'BBMASK_using-collection2 += "{PROJECT_ROOT}/layers/meta-layer2/recipes-bad/bad.bb"\n'.format(
+                PROJECT_ROOT=self.project_root
+            )
+        )
+
+    def test_inactive_layer_collection_bbmask(self):
+        # Check that laye-specific bbmasks are applied on the product using the layers.
+        self.assertShellCode(
+            """\
+            . init-build-env --product=using-collection1 --product=using-collection2
+            """,
+            success=True,
+        )
+
+        self.assertNotInBbconf(
+            'BBMASK_using-collection1 += "{PROJECT_ROOT}/layers/meta-layer2/recipes-bad/bad.bb"\n'.format(
+                PROJECT_ROOT=self.project_root
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
