@@ -130,6 +130,9 @@
                                     "name"
                                 ]
                             }
+                        },
+                        "tags": {
+                            "type": "object"
                         }
                     },
                     "additionalProperties": false
@@ -149,6 +152,9 @@
                         },
                         "conf": {
                             "type": "string"
+                        },
+                        "tags": {
+                            "type": "object"
                         }
                     },
                     "additionalProperties": false
@@ -168,6 +174,9 @@
                         },
                         "conf": {
                             "type": "string"
+                        },
+                        "tags": {
+                            "type": "object"
                         }
                     },
                     "additionalProperties": false
@@ -230,6 +239,9 @@
                         },
                         "conf": {
                             "type": "string"
+                        },
+                        "tags": {
+                            "type": "object"
                         }
                     },
                     "additionalProperties": false,
