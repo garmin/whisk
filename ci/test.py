@@ -239,6 +239,83 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             success=False,
         )
 
+    def test_tags(self):
+        self.write_conf(
+            """\
+            ---
+            version: 2
+            defaults:
+                products:
+                - test-dunfell
+                mode: mode
+                site: site
+
+            versions:
+                dunfell:
+                    oeinit: {ROOT}/ci/dummy-init
+                    tags:
+                        string: "bar"
+                        number: 123
+                        array:
+                          - 1
+                          - 2
+                          - 3
+                        dictionary:
+                            key1: "A"
+                            key2: "B"
+
+            products:
+                test-dunfell:
+                    default_version: dunfell
+                    tags:
+                        string: "bar"
+                        number: 123
+                        array:
+                          - 1
+                          - 2
+                          - 3
+                        dictionary:
+                            key1: "A"
+                            key2: "B"
+
+
+            modes:
+                mode:
+                    tags:
+                        string: "bar"
+                        number: 123
+                        array:
+                          - 1
+                          - 2
+                          - 3
+                        dictionary:
+                            key1: "A"
+                            key2: "B"
+
+            sites:
+                site:
+                    tags:
+                        string: "bar"
+                        number: 123
+                        array:
+                          - 1
+                          - 2
+                          - 3
+                        dictionary:
+                            key1: "A"
+                            key2: "B"
+
+            """.format(
+                ROOT=ROOT
+            )
+        )
+
+        self.assertShellCode(
+            """\
+            . init-build-env
+            """
+        )
+
 
 class WhiskFetchTests(WhiskTests, unittest.TestCase):
     def setUp(self):

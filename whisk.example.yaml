@@ -92,6 +92,10 @@ versions:
       # The path to the pyrex configuration file to use for this version
       conf: "%{WHISK_PROJECT_ROOT}/layers/dunfell/pyrex.ini"
 
+    # A dictionary where additional annotations may be placed. Whisk
+    # ignores anything in this field (optional)
+    tags: {}
+
     # The layer collections supported by this version. The order is preserved,
     # so layers will added to BBLAYERS in the same order as listed here.
     layers:
@@ -119,6 +123,10 @@ versions:
         # phrased starting from the project root.
         bbmask:
           - "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/meta-poky/recipes-core/tiny-init"
+
+        # A dictionary where additional annotations may be placed. Whisk
+        # ignores anything in this field (optional)
+        tags: {}
 
       - name: mingw
         paths:
@@ -151,6 +159,10 @@ modes:
     # is used (optional)
     conf: |
       # Mode placeholder
+
+    # A dictionary where additional annotations may be placed. Whisk
+    # ignores anything in this field (optional)
+    tags: {}
 
   release:
     description: Release build for public release
@@ -233,6 +245,10 @@ products:
     conf: |
       MACHINE = "qemux86-64"
       DISTRO = "poky"
+
+    # A dictionary where additional annotations may be placed. Whisk
+    # ignores anything in this field (optional)
+    tags: {}
 
   qemuarm:
     description: A test qemuarm product
