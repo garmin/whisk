@@ -27,6 +27,9 @@ import tabulate
 import textwrap
 import tqdm
 import yaml
+import re
+from enum import Enum
+from collections import namedtuple
 
 tabulate.PRESERVE_WHITESPACE = True
 
@@ -36,8 +39,110 @@ SCHEMA_FILE = THIS_DIR / "whisk.schema.json"
 CACHE_VERSION = 1
 
 
+class OEVersion(object):
+    def __init__(
+        self,
+        conf_version,
+        *,
+        append_sep=":",
+        basehash_ignore_vars="BB_BASEHASH_IGNORE_VARS",
+        env_passthrough_var="BB_ENV_PASSTHROUGH_ADDITIONS",
+    ):
+        self.conf_version = conf_version
+        self.append_sep = append_sep
+        self.basehash_ignore_vars = basehash_ignore_vars
+        self.env_passthrough_var = env_passthrough_var
+
+
+VERSION_COMPAT = {
+    "morty": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "pyro": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "rocko": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "sumo": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "thud": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "warrior": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "zeus": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "dunfell": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "gatesgarth": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "hardknott": OEVersion(
+        1,
+        append_sep="_",
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "honister": OEVersion(
+        1,
+        basehash_ignore_vars="BB_HASHBASE_WHITELIST",
+        env_passthrough_var="BB_ENV_EXTRAWHITE",
+    ),
+    "kirkstone": OEVersion(2),
+    "langdale": OEVersion(2),
+}
+
+LATEST_COMPAT = OEVersion(2)
+
+
 class ConfTemplate(string.Template):
     delimiter = r"%"
+
+
+def get_layerseries_corenames(version):
+    for layer in version.get("layers", []):
+        for layer_path in [pathlib.Path(p) for p in layer.get("paths", [])]:
+            conf_file = layer_path / "conf" / "layer.conf"
+            if conf_file.exists():
+                with conf_file.open("r") as f:
+                    for line in f:
+                        m = re.match(r'^LAYERSERIES_CORENAMES *= *"(.*)"', line)
+                        if m is not None:
+                            return m.group(1).split()
+
+    return []
 
 
 def print_items(items, is_current, extra=[]):
@@ -401,27 +506,38 @@ def configure(sys_args):
                 print("Fetch command '%s' failed:\n%s" % (c, r.stdout))
                 return 1
 
+    compat_name = version.get("compat", "auto")
+    if compat_name == "auto":
+        corenames = get_layerseries_corenames(version)
+        if corenames:
+            for c in corenames:
+                if c in VERSION_COMPAT:
+                    compat_name = c
+                    break
+            else:
+                # Version unknown. Assume the latest (no compat flags)
+                compat_name = ""
+        else:
+            # No LAYERSERIES_CORENAMES. Assume "pyro" since it is was the last
+            # version to not have one
+            compat_name = "pyro"
+
+    compat = VERSION_COMPAT.get(compat_name, LATEST_COMPAT)
+
     with sys_args.env.open("w") as f:
         f.write(
             textwrap.dedent(
-                """\
-                export WHISK_PRODUCTS="{products}"
-                export WHISK_MODE="{mode}"
-                export WHISK_SITE="{site}"
-                export WHISK_VERSION="{version}"
-                export WHISK_ACTUAL_VERSION="{actual_version}"
+                f"""\
+                export WHISK_PRODUCTS="{' '.join(cur_products)}"
+                export WHISK_MODE="{cur_mode}"
+                export WHISK_SITE="{cur_site}"
+                export WHISK_VERSION="{cur_version}"
+                export WHISK_ACTUAL_VERSION="{cur_actual_version}"
 
-                export WHISK_BUILD_DIR={build_dir}
-                export WHISK_INIT={init}
+                export WHISK_BUILD_DIR={str(build_dir.absolute())}
+                export WHISK_INIT={'true' if sys_args.init else 'false'}
+                export WHISK_COMPAT="{compat_name}"
                 """
-            ).format(
-                products=" ".join(cur_products),
-                mode=cur_mode,
-                site=cur_site,
-                version=cur_version,
-                actual_version=cur_actual_version,
-                build_dir=str(build_dir.absolute()),
-                init="true" if sys_args.init else "false",
             )
         )
 
@@ -435,10 +551,14 @@ def configure(sys_args):
                 textwrap.dedent(
                     """\
                     export WHISK_PROJECT_ROOT="{root}"
-                    export BB_ENV_EXTRAWHITE="${{BB_ENV_EXTRAWHITE}} WHISK_PROJECT_ROOT WHISK_PRODUCTS WHISK_MODE WHISK_SITE WHISK_ACTUAL_VERSION"
+                    export {env_passthrough_var}="${{{env_passthrough_var}}} {passthrough_vars} WHISK_PROJECT_ROOT WHISK_PRODUCTS WHISK_MODE WHISK_SITE WHISK_ACTUAL_VERSION"
                     PATH="{this_dir}/bin:$PATH"
                     """
                 ).format(
+                    passthrough_vars=" ".join(
+                        conf.get("hooks", {}).get("env_passthrough_vars", [])
+                    ),
+                    env_passthrough_var=compat.env_passthrough_var,
                     root=project_root.absolute(),
                     this_dir=THIS_DIR,
                 )
@@ -492,6 +612,7 @@ def configure(sys_args):
 
         with (build_dir / "conf" / "site.conf").open("w") as f:
             f.write("# This file was dynamically generated by whisk\n")
+            f.write(f'CONF_VERSION = "{compat.conf_version}"\n\n')
 
             f.write(conf["sites"][cur_site].get("conf", ""))
             f.write("\n")
@@ -582,14 +703,9 @@ def configure(sys_args):
                     ).format(multiconfigs=" ".join(sorted(multiconfigs)))
                 )
 
+            f.write('BBMASK += "${BBMASK_${WHISK_PRODUCT}}"\n')
             f.write(
-                textwrap.dedent(
-                    """\
-                    BBMASK += "${BBMASK_${WHISK_PRODUCT}}"
-
-                    BB_HASHBASE_WHITELIST_append = " WHISK_PROJECT_ROOT"
-                    """
-                )
+                f'{compat.basehash_ignore_vars}{compat.append_sep}append = " WHISK_PROJECT_ROOT"\n'
             )
 
             f.write(conf.get("core", {}).get("conf", ""))

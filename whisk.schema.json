@@ -59,6 +59,12 @@
                 "pre_init": {
                     "type": "string"
                 },
+                "env_passthrough_vars": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "post_init": {
                     "type": "string"
                 }
@@ -80,6 +86,9 @@
                             "type": "string"
                         },
                         "oeinit": {
+                            "type": "string"
+                        },
+                        "compat": {
                             "type": "string"
                         },
                         "fetch": {

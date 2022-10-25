@@ -54,7 +54,7 @@ class WhiskTests(object):
         with self.conf_file.open("a+") as f:
             f.write(textwrap.dedent(conf))
 
-    def assertShellCode(self, fragment, capture_vars={}, env=None, success=True):
+    def assertShellCode(self, fragment, expected_capture={}, env=None, success=True):
         (fd, log_file) = tempfile.mkstemp()
         self.addCleanup(lambda: os.unlink(log_file))
         os.close(fd)
@@ -67,7 +67,7 @@ class WhiskTests(object):
             f.write("set -eo pipefail\n")
             f.write(textwrap.dedent(fragment))
             f.write("\n")
-            for v in capture_vars.keys():
+            for v in expected_capture.keys():
                 f.write('echo "%s=$%s" >> %s\n' % (v, v, capture_file))
             f.flush()
 
@@ -97,14 +97,21 @@ class WhiskTests(object):
                     "Process exited with zero exit code. Output:\n%s" % log.read(),
                 )
 
-        v = {}
+        actual_captured = {}
         with open(capture_file, "r") as f:
             for line in f:
                 line = line.rstrip()
                 key, val = line.split("=", 1)
-                v[key] = val
+                actual_captured[key] = val
 
-        self.assertDictEqual(v, capture_vars)
+        for key, value in expected_capture.items():
+            if isinstance(value, set):
+                # If the input capture variable set is a set, convert the
+                # actual captured variables to a set (split by whitespace) also
+                if key in actual_captured:
+                    actual_captured[key] = set(actual_captured[key].split())
+
+        self.assertDictEqual(actual_captured, expected_capture)
 
     def assertConfigVar(self, name, value):
         with self.conf_file.open("r") as f:
@@ -493,19 +500,75 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
                 mode: mode
                 site: site
 
+            hooks:
+                env_passthrough_vars:
+                    - TEST_VAR
+
             versions:
+                kirkstone:
+                    compat: kirkstone
+                    oeinit: {ROOT}/ci/dummy-init
                 dunfell:
+                    compat: dunfell
                     oeinit: {ROOT}/ci/dummy-init
                 zeus:
                     oeinit: {ROOT}/ci/dummy-init
 
+                kirkstone-auto:
+                    oeinit: {ROOT}/ci/dummy-init
+                    layers:
+                      - name: core
+                        paths:
+                          - {PROJECT_ROOT}/kirkstone/
+
+                dunfell-auto:
+                    oeinit: {ROOT}/ci/dummy-init
+                    layers:
+                      - name: core
+                        paths:
+                          - {PROJECT_ROOT}/dunfell/
+
+                pyro-auto:
+                    oeinit: {ROOT}/ci/dummy-init
+                    # No layers, so "auto" will resolve to the newest version
+                    # without LAYERSERIES_CORENAMES (pyro)
+
+
+                future-auto:
+                    oeinit: {ROOT}/ci/dummy-init
+                    layers:
+                      - name: core
+                        paths:
+                          - {PROJECT_ROOT}/future/
+
+                future:
+                    oeinit: {ROOT}/ci/dummy-init
+                    compat: future
+
             products:
+                test-kirkstone:
+                    default_version: kirkstone
                 test-dunfell:
                     default_version: dunfell
                 test-dunfell2:
                     default_version: dunfell
                 test-zeus:
                     default_version: zeus
+
+                test-kirkstone-auto:
+                    default_version: kirkstone-auto
+
+                test-dunfell-auto:
+                    default_version: dunfell-auto
+
+                test-pyro-auto:
+                    default_version: pyro-auto
+
+                test-future-auto:
+                    default_version: future-auto
+
+                test-future:
+                    default_version: future
 
             modes:
                 mode: {{}}
@@ -514,9 +577,17 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
                 site: {{}}
 
             """.format(
-                ROOT=ROOT
+                ROOT=ROOT,
+                PROJECT_ROOT=self.project_root,
             )
         )
+
+        for c in ("dunfell", "kirkstone", "future"):
+            conf_dir = self.project_root / c / "conf"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+
+            with (conf_dir / "layer.conf").open("w") as f:
+                f.write(f'LAYERSERIES_CORENAMES = "{c}"\n')
 
     def test_default_version(self):
         self.assertShellCode(
@@ -745,6 +816,71 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_VERSION": "dunfell",
                 "WHISK_ACTUAL_VERSION": "dunfell",
+            },
+        )
+
+    def test_compat_explicit(self):
+        # Test that using a version with an explicit compat option reports that
+        # version
+        for version in "dunfell", "kirkstone", "future":
+            with self.subTest(version=version):
+                self.assertShellCode(
+                    f"""\
+                    . init-build-env --product=test-{version}
+                    """,
+                    {
+                        "WHISK_COMPAT": version,
+                    },
+                )
+
+    def test_compat_future_auto(self):
+        # Test that auto detection of version by reading layer.conf works
+        for version in "pyro", "dunfell", "kirkstone":
+            with self.subTest(version=version):
+                self.assertShellCode(
+                    f"""\
+                    . init-build-env --product=test-{version}-auto
+                    """,
+                    {
+                        "WHISK_COMPAT": version,
+                    },
+                )
+
+    def test_dunfell_passthrough(self):
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-dunfell
+            """,
+            {
+                "WHISK_COMPAT": "dunfell",
+                "BB_ENV_EXTRAWHITE": {
+                    "TEST_VAR",
+                    "WHISK_ACTUAL_VERSION",
+                    "WHISK_MODE",
+                    "WHISK_PRODUCTS",
+                    "WHISK_PROJECT_ROOT",
+                    "WHISK_SITE",
+                },
+                "BB_ENV_PASSTHROUGH_ADDITIONS": "",
+            },
+        )
+
+    def test_kirkstone_passthrough(self):
+        self.assertShellCode(
+            """\
+            . init-build-env --product=test-kirkstone
+            """,
+            {
+                "WHISK_COMPAT": "kirkstone",
+                "BB_ENV_EXTRAWHITE": "",
+                "BB_ENV_PASSTHROUGH_ADDITIONS": {
+                    "TEST_VAR",
+                    "WHISK_ACTUAL_VERSION",
+                    "WHISK_MODE",
+                    "WHISK_PRODUCTS",
+                    "WHISK_PROJECT_ROOT",
+                    "WHISK_SITE",
+                },
             },
         )
 
