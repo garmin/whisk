@@ -51,6 +51,10 @@ hooks:
   post_init: |
     # placeholder
 
+  # A list of environment variables to pass through to bitbake (e.g.
+  # BB_ENV_EXTRAWHITE/BB_ENV_PASSTHROUGH_ADDITIONS)
+  env_passthrough_vars: []
+
 # Commands to run if the user specifies --fetch to fetch layers.
 #
 # Fetch commands are always run with the current working directory set to the
@@ -69,6 +73,12 @@ versions:
   dunfell:
     # a short description of the version (optional)
     description: Yocto 3.1
+
+    # What Yocto release this version is compatible with, as the codename of
+    # the release (e.g. "zeus", "dunfell", "gatesgarth", etc.). If set to
+    # "auto" (the default if unspecified), whisk will scan all layers in this
+    # version to try and automatically figure out an appropriate version
+    compat: auto
 
     # The path to the OE initialization script for this version
     oeinit: "%{WHISK_PROJECT_ROOT}/layers/dunfell/poky/oe-init-build-env"
