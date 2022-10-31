@@ -163,6 +163,7 @@ def configure(sys_args):
         "--quiet", "-q", action="store_true", help="Suppress non-error output"
     )
     parser.add_argument("--fetch", action="store_true", help="Fetch required layers")
+    parser.add_argument("--no-pyrex", action="store_true", help="Do not use Pyrex")
 
     user_args = parser.parse_args(sys_args.user_args)
 
@@ -443,7 +444,7 @@ def configure(sys_args):
                 )
             )
 
-            if version.get("pyrex"):
+            if version.get("pyrex") and not user_args.no_pyrex:
                 f.write(
                     textwrap.dedent(
                         """\
