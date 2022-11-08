@@ -581,10 +581,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
         )
 
     def test_mixed_product_implicit_default(self):
-        """
-        Mixing products with different versions using an implicit default
-        should fail
-        """
+        # Mixing products with different versions using an implicit default
+        # should fail
         self.assertShellCode(
             """\
             . init-build-env --product=test-dunfell --product=test-zeus
@@ -593,9 +591,7 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
         )
 
     def test_mixed_product_explicit_default(self):
-        """
-        Different version products with explicit default should fail
-        """
+        # Different version products with explicit default should fail
         self.assertShellCode(
             """\
             . init-build-env --product=test-dunfell --product=test-zeus --version=default
@@ -682,10 +678,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
         )
 
     def test_default_persists_across_versions(self):
-        """
-        Tests that when the default version persists, it means whatever version
-        is supported by the configured products
-        """
+        # Tests that when the default version persists, it means whatever version
+        # is supported by the configured products
         self.assertShellCode(
             """\
             . init-build-env --product=test-dunfell --version=default
@@ -977,9 +971,7 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
         )
 
     def test_single_non_multiconfig_product(self):
-        """
-        Using a single non-multiconfig product is okay.
-        """
+        # Using a single non-multiconfig product is okay.
         self.assertShellCode(
             """\
             . init-build-env --product=test-non-mc1
@@ -988,10 +980,8 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
         )
 
     def test_multiple_non_multiconfig_products(self):
-        """
-        Attempting to use two non-multiconfig products at the same time
-        should fail.
-        """
+        # Attempting to use two non-multiconfig products at the same time
+        # should fail.
         self.assertShellCode(
             """\
             . init-build-env --product=test-non-mc1 --product=test-non-mc2
@@ -1000,10 +990,8 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
         )
 
     def test_multiple_multiconfig_products(self):
-        """
-        Attempting to use any multiconfig product in conjunction with a
-        non-multiconfig product should fail.
-        """
+        # Attempting to use any multiconfig product in conjunction with a
+        # non-multiconfig product should fail.
         self.assertShellCode(
             """\
             . init-build-env --product=test-mc1 --product=test-mc2
@@ -1012,10 +1000,8 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
         )
 
     def test_non_multiconfig_product_with_other_multiconfigs_enabled(self):
-        """
-        Attempting to enable additional multiconfigs which should implicitly be
-        enabled when a non-multiconfig product is selected, should fail.
-        """
+        # Attempting to enable additional multiconfigs which should implicitly
+        # be enabled when a non-multiconfig product is selected, should fail.
         self.assertShellCode(
             """\
             . init-build-env --product=test-non-mc3
