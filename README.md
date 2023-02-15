@@ -33,10 +33,17 @@ OpenEmbedded and the Yocto project. The key features are:
 ## Requirements
 
 Whisk is primarily written in Python, with a small initialization shell script
-to setup the build environment. The Python code runs under
+to setup the build environment. By default, the Python code runs under
 [virtualenv](https://virtualenv.pypa.io/en/latest/) and the initialization
 script will use it to automatically install the required dependencies. See the
 virtualenv documentation for installation instructions.
+
+If you wish to avoid the usage of virtualenv, for instance because you run the
+initialization shell script in a restricted environment where downloading
+dependencies is not possible, you may set the `WHISK_NO_VENV` environment
+variable. The value does not matter, only that it is set. In that case, you
+yourself must ensure that the required dependencies are available. See
+[requirements.txt](/requirements.txt) for the list of dependencies.
 
 [Using Whisk]: #using-whisk
 ## Using Whisk
