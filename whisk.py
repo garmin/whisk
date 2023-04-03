@@ -211,7 +211,6 @@ def parse_conf_file(path):
 
     # Recursively do environment substitution on all strings
     def substitute(item):
-
         if isinstance(item, dict):
             for k in item:
                 item[k] = substitute(item[k])
@@ -439,9 +438,7 @@ def configure(sys_args):
     # Sanity check that if any selected product does not support multiconfig,
     # it is the only selected product.
     for p in cur_products:
-
         if not conf["products"][p].get("multiconfig_enabled", True):
-
             using_multiconfig = False
 
             if len(cur_products) > 1:
@@ -690,7 +687,6 @@ def configure(sys_args):
             # Only set up Bitbake multiconfig if the selected Whisk products
             # support it.
             if using_multiconfig:
-
                 multiconfigs = set("product-%s" % p for p in cur_products)
                 for p in cur_products:
                     multiconfigs |= set(conf["products"][p].get("multiconfigs", []))
@@ -719,7 +715,6 @@ def configure(sys_args):
             # in Whisk's conf/multiconfig directory, at the very bottom
             # of site.conf.
             if not using_multiconfig:
-
                 assert len(cur_products) == 1
 
                 f.write(
