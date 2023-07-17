@@ -25,6 +25,7 @@ REV="$(git rev-parse HEAD):$(shasum "requirements.txt")"
 if [ ! -e "venv/rev.txt" ] || [ "$(cat venv/rev.txt)" != "$REV" ]; then
     python3 -m venv "venv"
     . "venv/bin/activate"
+    pip install -U pip
     pip install -r requirements.txt
     echo "$REV" > "venv/rev.txt"
 fi
