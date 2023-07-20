@@ -1,6 +1,7 @@
 PyYAML==6.0
 jsonschema==3.2.0; python_version < '3.7'
 jsonschema==4.17.3; python_version >= '3.7'
-tabulate==0.9.0
+tabulate==0.8.10; python_version < '3.7'
+tabulate==0.9.0; python_version >= '3.7'
 tqdm==4.65.0
 yamllint==1.32.0
