@@ -217,6 +217,12 @@ products:
     # particularly if you use a lot of codenames (optional)
     description: A test qemux86-64 product
 
+    # The list of maintainers for the product. The name of the maintainer is
+    # required, but the email is optional.
+    maintainers:
+      - name: John Doe
+        email: john.doe@company.com
+
     # The default version that this product will build with if unspecified, or
     # if the user specifies the default should be used. The user can force a
     # product to use a different version if they are feeling adventurous

@@ -246,6 +246,46 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             success=False,
         )
 
+    def test_maintainers(self):
+        self.write_conf(
+            """
+            version: 2
+            defaults:
+                products:
+                - test-dunfell
+                mode: mode
+                site: site
+
+            versions:
+                dunfell:
+                    oeinit: {ROOT}/ci/dummy-init
+
+            products:
+                test-dunfell:
+                    maintainers:
+                        - name: John Doe
+                          email: john.doe@company.com
+                        - name: Jane Doe
+                          email: jane.doe@company.com
+                    default_version: dunfell
+
+            modes:
+                mode: {{}}
+
+            sites:
+                site: {{}}
+
+            """.format(
+                ROOT=ROOT
+            )
+        )
+
+        self.assertShellCode(
+            """\
+            . init-build-env
+            """
+        )
+
     def test_tags(self):
         self.write_conf(
             """\

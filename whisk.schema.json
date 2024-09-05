@@ -222,6 +222,24 @@
                         "description": {
                             "type": "string"
                         },
+                        "maintainers": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": [
+                                "name"
+                            ]
+                        },
                         "default_version": {
                             "type": "string"
                         },
