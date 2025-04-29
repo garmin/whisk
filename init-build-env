@@ -52,7 +52,7 @@ configure() {
 			-- "$@"
 	local ERR=$?
 
-	if [ "$WHISK_CAPTURE_ENV" == "-" ]; then
+	if [ "$WHISK_CAPTURE_ENV" = "-" ]; then
 		cat $TEMP_ENV_FILE
 	elif [ -n "$WHISK_CAPTURE_ENV" ]; then
 		cat $TEMP_ENV_FILE > "$WHISK_CAPTURE_ENV"
