@@ -1,6 +1,6 @@
-#! /bin/bash
+#!/bin/sh
 #
-# 2020 Garmin Ltd. or its subsidiaries
+# 2020-2025 Garmin Ltd. or its subsidiaries
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,28 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -n "$BASH_SOURCE" ]; then
-	THIS_SCRIPT=$BASH_SOURCE
-elif [ -n "$ZSH_NAME" ]; then
-	THIS_SCRIPT=$0
+# check if the script is sourced or executed and get the script name
+is_sourced=1
+THIS_SCRIPT=""
+if [ -n "$ZSH_VERSION" ]; then
+	THIS_SCRIPT="$0"
+	case "$ZSH_EVAL_CONTEXT" in 
+		*:file:*) is_sourced=0;;
+	esac
+elif [ -n "$BASH_VERSION" ]; then
+	#shellcheck disable=SC3054,SC3028
+	THIS_SCRIPT="${BASH_SOURCE[0]}"
+	if [ "$THIS_SCRIPT" = "$0" ]; then
+		is_sourced=0
+	fi
 else
-	THIS_SCRIPT="$(pwd)/init-build-env"
+	echo "Unknown shell. Assuming this script is sourced."
+	THIS_SCRIPT="init-build-env"
 fi
 
-if [ -z "$ZSH_NAME" ] && [ "$0" = "$THIS_SCRIPT" ]; then
-    echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'"
-    exit 1
+if [ $is_sourced -eq 0 ]; then
+	echo "Error: This script needs to be sourced. Please run as '. $THIS_SCRIPT'"
+	exit 1
 fi
 
 if [ -z "$WHISK_ROOT" ]; then
-	WHISK_ROOT=$(dirname $(readlink -f $THIS_SCRIPT))
+	WHISK_ROOT=$(dirname "$(readlink -f "$THIS_SCRIPT")")
 	if [ -z "$WHISK_ROOT" ]; then
 		WHISK_ROOT="$(pwd)"
 	fi
 fi
 
-if [ -z "$WHISKCONF" ]; then
-	WHISKCONF="$(readlink -f $(dirname $THIS_SCRIPT))/whisk.yaml"
+if [ -z "$WHISK_CONF" ]; then
+	WHISK_CONF="$(readlink -f "$(dirname $THIS_SCRIPT)")/whisk.yaml"
 fi
 
 whisk_cleanup() {
@@ -43,33 +54,33 @@ whisk_cleanup() {
 }
 
 configure() {
-	local TEMP_ENV_FILE=$(mktemp -t whisk-env.XXXXXX)
+	tmp_env_file=$(mktemp -t whisk-env.XXXXXX)
 
-	$WHISK_ROOT/bin/whisk configure \
-			--env $TEMP_ENV_FILE \
-			--conf $WHISKCONF \
-			$WHISK_EXTRA_CONF \
+	"$WHISK_ROOT/bin/whisk" configure \
+			--env "$tmp_env_file" \
+			--conf "$WHISK_CONF" \
+			"$WHISK_EXTRA_CONF" \
 			-- "$@"
-	local ERR=$?
+	ERR=$?
 
 	if [ "$WHISK_CAPTURE_ENV" = "-" ]; then
-		cat $TEMP_ENV_FILE
+		cat "$tmp_env_file"
 	elif [ -n "$WHISK_CAPTURE_ENV" ]; then
-		cat $TEMP_ENV_FILE > "$WHISK_CAPTURE_ENV"
+		cat "$tmp_env_file" > "$WHISK_CAPTURE_ENV"
 	fi
 
 	if [ $ERR != 0 ]; then
-		rm $TEMP_ENV_FILE
+		rm "$tmp_env_file"
 		return $ERR
 	fi
 
-	. $TEMP_ENV_FILE
-	rm $TEMP_ENV_FILE
+	#shellcheck disable=SC1090
+	. "$tmp_env_file"
+	rm "$tmp_env_file"
 	return 0
 }
 
-WHISK_EXTRA_CONF="--init" configure "$@"
-if [ $? -ne 0 ]; then
+if ! WHISK_EXTRA_CONF="--init" configure "$@"; then
 	whisk_cleanup
 	return 1
 fi
