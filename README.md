@@ -80,17 +80,17 @@ be used (if no default is specified there, you will be forced to provide a
 value). If you would like a list of options that can be specified when
 initializing the environment, use the `--help` option, like so:
 
-    . init-build-env --help
+    . ./init-build-env --help
 
 If you would like a complete list of options that may be specified for
 `--products`, `--mode`, `--site`, or `--version`, use the `--list` option:
 
-    . init-build-env --list
+    . ./init-build-env --list
 
 Once you have decided what options you would like to use, initialize your build
 environment, e.g.
 
-    . init-build-env --product=foo --mode=debug --site=here --version=default
+    . ./init-build-env --product=foo --mode=debug --site=here --version=default
 
 This will setup the build environment and change your working directory to the
 build directory
@@ -415,7 +415,7 @@ set -e
 git submodule update --init whisk
 
 # Configure whisk, instructing it to fetch the required product layers
-. init-build-env -n --product=$PRODUCT --fetch
+. ./init-build-env -n --product=$PRODUCT --fetch
 
 # Build default targets
 bitbake all-targets
