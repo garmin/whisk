@@ -34,11 +34,8 @@
         "defaults": {
             "type": "object",
             "properties": {
-                "products": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "product": {
+                    "type": "string"
                 },
                 "mode": {
                     "type": "string"
