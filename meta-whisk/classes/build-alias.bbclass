@@ -46,6 +46,8 @@ python() {
         if t.startswith('mc:'):
             _, mc, recipe = t.split(':')
             mcdepends.append("mc::%s:%s:do_build" % (mc, recipe))
+        elif ":" in t:
+            depends.append(t)
         else:
             depends.append("%s:do_build" % t)
 

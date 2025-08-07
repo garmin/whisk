@@ -169,8 +169,7 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             """
             version: 2
             defaults:
-                products:
-                - test-dunfell
+                product: test-dunfell
                 mode: mode
                 site: site
 
@@ -251,8 +250,7 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             """
             version: 2
             defaults:
-                products:
-                - test-dunfell
+                product: test-dunfell
                 mode: mode
                 site: site
 
@@ -292,8 +290,7 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             ---
             version: 2
             defaults:
-                products:
-                - test-dunfell
+                product: test-dunfell
                 mode: mode
                 site: site
 
@@ -681,35 +678,6 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             },
         )
 
-        self.assertShellCode(
-            """\
-            . init-build-env --product=test-dunfell --product=test-zeus --version=zeus
-            """,
-            {
-                "WHISK_VERSION": "zeus",
-                "WHISK_ACTUAL_VERSION": "zeus",
-            },
-        )
-
-    def test_mixed_product_implicit_default(self):
-        # Mixing products with different versions using an implicit default
-        # should fail
-        self.assertShellCode(
-            """\
-            . init-build-env --product=test-dunfell --product=test-zeus
-            """,
-            success=False,
-        )
-
-    def test_mixed_product_explicit_default(self):
-        # Different version products with explicit default should fail
-        self.assertShellCode(
-            """\
-            . init-build-env --product=test-dunfell --product=test-zeus --version=default
-            """,
-            success=False,
-        )
-
     def test_changing_compatible_version_when_default(self):
         # Changing to a product with the same version after configuring
         self.assertShellCode(
@@ -981,34 +949,13 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             success=False,
         )
 
-    def test_multiple_products_joined(self):
-        self.assertShellCode(
-            """\
-            . init-build-env --products="test-dunfell test-zeus" --version=dunfell --mode=modeA --site=siteA
-            """,
-            {
-                "WHISK_PRODUCTS": "test-dunfell test-zeus",
-            },
-        )
-
-    def test_multiple_products_split(self):
-        self.assertShellCode(
-            """\
-            . init-build-env --product=test-dunfell --product=test-zeus --version=dunfell --mode=modeA --site=siteA
-            """,
-            {
-                "WHISK_PRODUCTS": "test-dunfell test-zeus",
-            },
-        )
-
     def test_defaults(self):
         self.append_conf(
             """\
             defaults:
                 mode: modeA
                 site: siteA
-                products:
-                - test-dunfell
+                product: test-dunfell
             """
         )
 
@@ -1053,8 +1000,7 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             defaults:
                 mode: modeA
                 site: siteA
-                products:
-                - test-dunfell
+                product: test-dunfell
             """
         )
 
@@ -1138,8 +1084,7 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
             defaults:
                 mode: modeA
                 site: siteA
-                products:
-                - test-non-mc1
+                product: test-non-mc1
 
             """.format(
                 ROOT=ROOT
@@ -1151,26 +1096,6 @@ class WhiskNonMulticonfigTests(WhiskTests, unittest.TestCase):
         self.assertShellCode(
             """\
             . init-build-env --product=test-non-mc1
-            """,
-            success=True,
-        )
-
-    def test_multiple_non_multiconfig_products(self):
-        # Attempting to use two non-multiconfig products at the same time
-        # should fail.
-        self.assertShellCode(
-            """\
-            . init-build-env --product=test-non-mc1 --product=test-non-mc2
-            """,
-            success=False,
-        )
-
-    def test_multiple_multiconfig_products(self):
-        # Attempting to use any multiconfig product in conjunction with a
-        # non-multiconfig product should fail.
-        self.assertShellCode(
-            """\
-            . init-build-env --product=test-mc1 --product=test-mc2
             """,
             success=True,
         )
@@ -1210,7 +1135,6 @@ class WhiskBbmaskTests(WhiskTests, unittest.TestCase):
                         - "%{{WHISK_PROJECT_ROOT}}/layers/meta-layer2/recipes-bad/bad.bb"
 
             products:
-
                 using-collection1:
                     default_version: dunfell
                     layers:
@@ -1230,8 +1154,6 @@ class WhiskBbmaskTests(WhiskTests, unittest.TestCase):
             defaults:
                 mode: modeA
                 site: siteA
-                products:
-                - using-collection1
 
             """.format(
                 ROOT=ROOT
@@ -1251,65 +1173,25 @@ class WhiskBbmaskTests(WhiskTests, unittest.TestCase):
         self.assertNotIn(line, self.readBbconfLines())
 
     def test_layer_bbmask(self):
-        # Check that the basic formulation of per-product masks for layer
-        # collections is working.
+        mask = (
+            f'BBMASK += "{self.project_root}/layers/meta-layer2/recipes-bad/bad.bb"\n'
+        )
+
         self.assertShellCode(
             """\
-            . init-build-env --product=using-collection1 --product=using-collection2
+            . init-build-env --product=using-collection1
             """,
             success=True,
         )
+        self.assertNotInBbconf(mask)
 
-        self.assertInBbconf(
-            'BBMASK_using-collection1 += "{PROJECT_ROOT}/layers/meta-layer2"\n'.format(
-                PROJECT_ROOT=self.project_root
-            )
-        )
-        self.assertInBbconf(
-            'BBMASK_using-collection2 += "{PROJECT_ROOT}/layers/meta-layer1"\n'.format(
-                PROJECT_ROOT=self.project_root
-            )
-        )
-        self.assertNotInBbconf(
-            'BBMASK_using-collection1 += "{PROJECT_ROOT}/layers/meta-layer1"\n'.format(
-                PROJECT_ROOT=self.project_root
-            )
-        )
-        self.assertNotInBbconf(
-            'BBMASK_using-collection2 += "{PROJECT_ROOT}/layers/meta-layer2"\n'.format(
-                PROJECT_ROOT=self.project_root
-            )
-        )
-
-    def test_active_layer_collection_bbmask(self):
-        # Check that laye-specific bbmasks are applied on the product using the layers.
         self.assertShellCode(
             """\
-            . init-build-env --product=using-collection1 --product=using-collection2
+            . init-build-env --product=using-collection2
             """,
             success=True,
         )
-
-        self.assertInBbconf(
-            'BBMASK_using-collection2 += "{PROJECT_ROOT}/layers/meta-layer2/recipes-bad/bad.bb"\n'.format(
-                PROJECT_ROOT=self.project_root
-            )
-        )
-
-    def test_inactive_layer_collection_bbmask(self):
-        # Check that laye-specific bbmasks are applied on the product using the layers.
-        self.assertShellCode(
-            """\
-            . init-build-env --product=using-collection1 --product=using-collection2
-            """,
-            success=True,
-        )
-
-        self.assertNotInBbconf(
-            'BBMASK_using-collection1 += "{PROJECT_ROOT}/layers/meta-layer2/recipes-bad/bad.bb"\n'.format(
-                PROJECT_ROOT=self.project_root
-            )
-        )
+        self.assertInBbconf(mask)
 
 
 if __name__ == "__main__":

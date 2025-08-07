@@ -24,6 +24,6 @@ python() {
     if not product:
         raise bb.parse.SkipRecipe('PRODUCT not defined')
 
-    if not product in (d.getVar('WHISK_PRODUCTS') or '').split():
+    if product != d.getVar('WHISK_PRODUCTS'):
         raise bb.parse.SkipRecipe('Product %s not configured' % product)
 }
