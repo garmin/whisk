@@ -15,15 +15,10 @@ OpenEmbedded and the Yocto project. The key features are:
 2. **Multiple axes of configuration** You can configure what you want to build
    (products), how you want to build them (modes) and where you are build them
    (sites)
-3. **Multiple products builds** Whisk sets up each product in it's own
-   [multiconfig][]. This means that you can configure and build multiple
-   products with the same invocation of bitbake, and that each products has
-   its own isolated bitbake environment.
-4. **Isolated layer configuration** Each product may define which layers it
-   needs to build. If multiple products are configured and the set of layers
-   required for each product is not equal, Whisk will use [BBMASK][] to mask
-   off the unused layers independently for each product. See [Product Layer Masking][]
-5. **Multiple versions** Whisk lets you define multiple different versions of
+3. **Isolated layer configuration** Each product may define which layers it
+   needs to build. Only the layers required to build the currently configured
+   product will be included in bblayers.conf
+4. **Multiple versions** Whisk lets you define multiple different versions of
    layers to target for your product. Each product can define a default version
    to use if unspecified, but users can override the default. This allows
    several use cases, such as testing products with more recent Yocto releases,
@@ -55,20 +50,19 @@ instructions on how to setup and configure Whisk for your project, see
 Building a product inside a repo using Whisk is a fairly straight forward
 process. Whisk itself lets you configure 4 attributes about what you want to
 build:
-1. **The product** This is the actual thing you want to build. You may choose
-   to build one or more products in a given environment
-2. **The mode** This allows you to choose how you want to build the product(s).
-   For example, there may be a mode to build the product(s) for internal use,
-   and a mode to build the product(s) for external (public) consumption.
+1. **The product** This is the actual thing you want to build.
+2. **The mode** This allows you to choose how you want to build the product.
+   For example, there may be a mode to build the product for internal use, and
+   a mode to build the product for external (public) consumption.
 3. **The site** This is where you are building from. There may be build options
    that are affected by your physical location, such as mirror setups, use of
    distributed compilers, etc.
 4. **The version** This defines what version of Yocto you want to build the
-   product(s) against. Allowing this to be defined as a build parameter allows
+   product against. Allowing this to be defined as a build parameter allows
    quickly testing if a product is compatible with multiple versions of Yocto
    and having different products use different versions independently of each
-   other. If you don't really care about this, you may specify the version
-   as `default` to choose the default version defined for the product(s)
+   other. If you don't really care about this, you may specify the version as
+   `default` to choose the default version defined for the product
 
 ### Initializing the environment
 
@@ -95,10 +89,6 @@ environment, e.g.
 This will setup the build environment and change your working directory to the
 build directory
 
-*Note:* If you choose `default` for the version and specify multiple products
-to be configured, whisk will fail if all specified products do not use the same
-version.
-
 ### Reconfiguring
 
 At any time after the environment has been initialized, you may change certain
@@ -123,8 +113,7 @@ to run the command:
 
     bitbake all-targets
 
-This will build all of the default targets for all of the currently selected
-products.
+This will build all of the default targets for the currently selected product.
 
 If you want to build a specific recipe for a specific product, be aware that
 whisk puts each product into it's own [multiconfig][]. So, if you want to build
@@ -191,13 +180,14 @@ they aware of the current user configuration. These are:
 | Variable | Description |
 |----------|-------------|
 | `WHISK_PROJECT_ROOT` | The absolute path the to the project root |
-| `WHISK_PRODUCT` | The current product. When evaluated in a products multiconfig, it will be the name of the product. In the base environment, it will be `"core"` |
-| `WHISK_PRODUCTS` | The list of products the user has currently selected to be built |
+| `WHISK_PRODUCT` | The product in the current multiconfig. When evaluated in a product multiconfig, it will be the name of the product. In the base environment, it will be `"core"` |
+| `WHISK_PRODUCT_DESCRIPTION` | The description of the current product. Only set in the product multiconfig |
+| `WHISK_PRODUCTS` | The name of the product the user has currently selected. Unlike `WHISK_PRODUCT`, the value of this variable doesn't change per-multiconfig |
 | `WHISK_MODE` | The name of the mode the user has currently selected |
 | `WHISK_SITE` | The name of the site the user has currently selected |
 | `WHISK_VERSION` | The name of the version the user has currently selected. May be `"default"` if the user specified that |
 | `WHISK_ACTUAL_VERSION` | the name of the version the user has specified, resolved to an actual name (e.g. will never be `"default"` |
-| `WHISK_TARGETS` | The combined set of all default build targets for all user configured products |
+| `WHISK_TARGETS` | The default build targets for the currently configured product |
 
 In addition, some variables are set for each defined product. In this table
 `${product}` will be replaced with the actual name of the product:
@@ -258,12 +248,6 @@ been configured by the user, which Whisk doesn't check.
 although it's been discussed. This would eliminate the need for publishing the
 per-product `WHISK_DEPLOY_DIR` variables, because one could simply query what
 `DEPLOY_DIR` is set to in the source multiconfig*
-
-[Product Layer Masking]: #product-layer-masking
-## Product Layer Masking
-
-Product layer masking requires Yocto 3.2 (gatesgarth) or later, as this is the
-first version to support separate [BBMASK][] per multiconfig.
 
 [Layer Fetching]: #layer-fetching
 ## Layer Fetching

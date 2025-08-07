@@ -175,8 +175,8 @@ def print_sites(conf, cur_site):
     print_items(conf["sites"], lambda s: s == cur_site)
 
 
-def print_products(conf, cur_products):
-    print_items(conf["products"], lambda p: p in cur_products)
+def print_products(conf, cur_product):
+    print_items(conf["products"], lambda p: p == cur_product)
 
 
 def print_versions(conf, cur_version):
@@ -244,9 +244,7 @@ def parse_conf_file(path):
 
 def configure(sys_args):
     parser = argparse.ArgumentParser(description="Configure build")
-    parser.add_argument(
-        "--products", action="append", default=[], help="Change build product(s)"
-    )
+    parser.add_argument("--product", help="Change build product")
     parser.add_argument("--mode", help="Change build mode")
     parser.add_argument("--site", help="Change build site")
     parser.add_argument("--version", help="Set Yocto version")
@@ -299,7 +297,7 @@ def configure(sys_args):
     defaults = conf.get("defaults", {})
 
     cur_mode = cache.get("mode", defaults.get("mode"))
-    cur_products = cache.get("products", defaults.get("products", []))
+    cur_product = cache.get("product", defaults.get("product"))
     cur_site = cache.get("site", defaults.get("site"))
     cur_version = cache.get("version", "default")
     cur_actual_version = cache.get("actual_version", "")
@@ -309,7 +307,7 @@ def configure(sys_args):
 
     if user_args.list:
         print("Possible products:")
-        print_products(conf, cur_products)
+        print_products(conf, cur_product)
         print("Possible modes:")
         print_modes(conf, cur_mode)
         print("Possible sites:")
@@ -318,17 +316,13 @@ def configure(sys_args):
         print_versions(conf, cur_version)
         return 0
 
-    if user_args.products:
+    if user_args.product:
         write = True
-        user_products = sorted(
-            set(itertools.chain(*(a.split() for a in user_args.products)))
-        )
-        for p in user_products:
-            if not p in conf.get("products", {}):
-                print("Unknown product '%s'. Please choose from:" % p)
-                print_products(conf, cur_products)
-                return 1
-        cur_products = user_products
+        if not user_args.product in conf.get("products", {}):
+            print("Unknown product '%s'. Please choose from:" % user_args.product)
+            print_products(conf, cur_product)
+            return 1
+        cur_product = user_args.product
 
     if user_args.mode:
         write = True
@@ -374,8 +368,8 @@ def configure(sys_args):
             return 1
         build_dir = pathlib.Path(user_args.build_dir)
 
-    if not cur_products:
-        print("One or more products must be specified with --product")
+    if not cur_product:
+        print("A product must be specified with --product")
         return 1
 
     if not cur_mode:
@@ -388,39 +382,21 @@ def configure(sys_args):
 
     # Set the actual version
     if cur_version == "default":
-        product_versions = {}
+        product_version = conf["products"][cur_product]["default_version"]
 
-        for p in cur_products:
-            v = conf["products"][p]["default_version"]
-            product_versions.setdefault(v, []).append(p)
-
-        keys = list(product_versions)
-        if len(keys) == 1:
-            if sys_args.init or keys[0] == cur_actual_version:
-                # Environment hasn't been initialized or it's not changing, so
-                # it can be set
-                cur_actual_version = keys[0]
-            else:
-                print(
-                    "Build environment is configured to build version '{actual}' and cannot be changed to version '{v}' required to build products: {products}. Please initialize a new environment with `--product='{products}' --version=default`".format(
-                        actual=cur_actual_version,
-                        v=keys[0],
-                        products=" ".join(product_versions[keys[0]]),
-                    )
-                )
-                return 1
+        if sys_args.init or product_version == cur_actual_version:
+            # Environment hasn't been initialized or it's not changing, so
+            # it can be set
+            cur_actual_version = product_version
         else:
             print(
-                "Multiple products with different default versions were chosen. They are:"
-            )
-            print(
-                tabulate.tabulate(
-                    [(k, " ".join(v)) for k, v in product_versions.items()],
-                    tablefmt="plain",
+                "Build environment is configured to build version '{actual}' and cannot be changed to version '{v}' required to build products: {product}. Please initialize a new environment with `--product={product} --version=default`".format(
+                    actual=cur_actual_version,
+                    v=product_version,
+                    product=cur_product,
                 )
             )
             return 1
-
     else:
         cur_actual_version = cur_version
 
@@ -433,33 +409,21 @@ def configure(sys_args):
         l["name"]: l.get("bbmask", []) for l in version.get("layers", [])
     }
 
-    using_multiconfig = True
-
     # Sanity check that if any selected product does not support multiconfig,
     # it is the only selected product.
-    for p in cur_products:
-        if not conf["products"][p].get("multiconfig_enabled", True):
-            using_multiconfig = False
-
-            if len(cur_products) > 1:
-                print(
-                    "Product '{product}' does not support multiconfig, but more than one product is chosen.".format(
-                        product=p
-                    )
+    using_multiconfig = conf["products"][cur_product].get("multiconfig_enabled", True)
+    if not using_multiconfig:
+        multiconfigs = conf["products"][cur_product].get("multiconfigs", [])
+        if len(multiconfigs) > 0:
+            print(
+                "Product '{product}' does not support multiconfig, but its 'multiconfig' attribute has some elements: {multiconfigs}.".format(
+                    product=cur_product, multiconfigs=multiconfigs
                 )
-                return 1
-
-            multiconfigs = conf["products"][p].get("multiconfigs", [])
-            if len(multiconfigs) > 0:
-                print(
-                    "Product '{product}' does not support multiconfig, but its 'multiconfig' attribute has some elements: {multiconfigs}.".format(
-                        product=p, multiconfigs=multiconfigs
-                    )
-                )
-                return 1
+            )
+            return 1
 
     # Sanity check that all configured products have layers
-    for p in ["core"] + cur_products:
+    for p in ["core", cur_product]:
         missing = set(
             l for l in get_product(p).get("layers", []) if not l in cur_layers_paths
         )
@@ -472,7 +436,7 @@ def configure(sys_args):
             return 1
 
     requested_layers = set()
-    for name in ["core"] + cur_products:
+    for name in ["core", cur_product]:
         requested_layers.update(get_product(name).get("layers", []))
 
     if user_args.fetch:
@@ -525,7 +489,7 @@ def configure(sys_args):
         f.write(
             textwrap.dedent(
                 f"""\
-                export WHISK_PRODUCTS="{' '.join(cur_products)}"
+                export WHISK_PRODUCTS="{cur_product}"
                 export WHISK_MODE="{cur_mode}"
                 export WHISK_SITE="{cur_site}"
                 export WHISK_VERSION="{cur_version}"
@@ -594,7 +558,7 @@ def configure(sys_args):
                     {
                         "cache_version": CACHE_VERSION,
                         "mode": cur_mode,
-                        "products": cur_products,
+                        "product": cur_product,
                         "site": cur_site,
                         "version": cur_version,
                         "actual_version": cur_actual_version,
@@ -654,42 +618,43 @@ def configure(sys_args):
                     # Set the deploy directory to output to a well-known location
                     DEPLOY_DIR = "${WHISK_DEPLOY_DIR_${WHISK_PRODUCT}}"
                     DEPLOY_DIR_IMAGE = "${DEPLOY_DIR}/images"
+
+                    WHISK_TARGETS_core = ""
                     """
                 )
             )
-            f.write(
-                'WHISK_TARGETS_core = "%s"\n'
-                % (" ".join("${WHISK_TARGETS_%s}" % p for p in cur_products))
-            )
+            f.write('WHISK_TARGETS = "${WHISK_TARGETS_%s}"\n' % cur_product)
 
-            for p in sorted(conf["products"]):
-                if conf["version"] < 2:
-                    f.write(
-                        'DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_{p}}}"\n'.format(p=p)
-                    )
-
+            if conf["version"] < 2:
                 f.write(
-                    textwrap.dedent(
-                        """\
-                        WHISK_DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_BASE}}/{p}"
-                        WHISK_TARGETS_{p} = "{targets}"
-                        """
-                    ).format(
-                        p=p,
-                        targets=" ".join(
-                            sorted(conf["products"][p].get("targets", []))
-                        ),
+                    'DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_{p}}}"\n'.format(
+                        p=cur_product
                     )
                 )
+
+            f.write(
+                textwrap.dedent(
+                    """\
+                    WHISK_DEPLOY_DIR_{p} = "${{WHISK_DEPLOY_DIR_BASE}}/{p}"
+                    WHISK_TARGETS_{p} = "{targets}"
+                    """
+                ).format(
+                    p=cur_product,
+                    targets=" ".join(
+                        sorted(conf["products"][cur_product].get("targets", []))
+                    ),
+                )
+            )
 
             f.write("\n")
 
             # Only set up Bitbake multiconfig if the selected Whisk products
             # support it.
             if using_multiconfig:
-                multiconfigs = set("product-%s" % p for p in cur_products)
-                for p in cur_products:
-                    multiconfigs |= set(conf["products"][p].get("multiconfigs", []))
+                multiconfigs = set(
+                    conf["products"][cur_product].get("multiconfigs", [])
+                )
+                multiconfigs.add("product-%s" % cur_product)
 
                 f.write(
                     textwrap.dedent(
@@ -699,7 +664,6 @@ def configure(sys_args):
                     ).format(multiconfigs=" ".join(sorted(multiconfigs)))
                 )
 
-            f.write('BBMASK += "${BBMASK_${WHISK_PRODUCT}}"\n')
             f.write(
                 f'{compat.basehash_ignore_vars}{compat.append_sep}append = " WHISK_PROJECT_ROOT"\n'
             )
@@ -715,8 +679,6 @@ def configure(sys_args):
             # in Whisk's conf/multiconfig directory, at the very bottom
             # of site.conf.
             if not using_multiconfig:
-                assert len(cur_products) == 1
-
                 f.write(
                     textwrap.dedent(
                         """\
@@ -724,7 +686,7 @@ def configure(sys_args):
                         # specific info into base configuration.
                         require conf/multiconfig/product-{product}.conf
                         """
-                    ).format(product=cur_products[0])
+                    ).format(product=cur_product)
                 )
                 f.write("\n")
 
@@ -761,21 +723,12 @@ def configure(sys_args):
                 )
             )
 
-            for name in ["core"] + cur_products:
-                for l, paths in cur_layers_paths.items():
-                    if not l in get_product(name).get("layers", []):
-                        for p in paths:
-                            f.write('BBMASK_%s += "%s"\n' % (name, p))
-                for l, masks in cur_layers_bbmasks.items():
-                    if l in get_product(name).get("layers", []):
-                        for m in masks:
-                            f.write('BBMASK_%s += "%s"\n' % (name, m))
-                f.write("\n")
-
             for l in version.get("layers", []):
                 if l["name"] in requested_layers:
                     for p in l.get("paths", []):
                         f.write('BBLAYERS += "%s"\n' % p)
+                    for m in l.get("bbmask", []):
+                        f.write('BBMASK += "%s"\n' % m)
 
             f.write('BBLAYERS += "%s/meta-whisk"\n\n' % THIS_DIR)
 
@@ -794,7 +747,7 @@ def configure(sys_args):
         return 0
 
     if not user_args.quiet:
-        print("PRODUCT    = %s" % " ".join(cur_products))
+        print("PRODUCT    = %s" % cur_product)
         print("MODE       = %s" % cur_mode)
         print("SITE       = %s" % cur_site)
         print("VERSION    = %s" % cur_version, end="")
