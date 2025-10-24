@@ -208,6 +208,18 @@ variables in the following tables:
 | `WHISK_BUILD_DIR` | The absolute path to the user-specified build directory |
 | `WHISK_INIT` | This will have the value `"true"` if the hook is being invoked during the first initialization of the environment, and `"false"` during a reconfigure |
 
+[Sub Products]: #subproducts
+## Subproducts
+
+By default each toplevel product defined in the `whisk.yaml` file is given its
+own multiconfig to isolate it from other product builds. However, it may be
+desirable to have a single toplevel product instead build multiple independent
+"subproducts" instead. If a product is defined with subproducts, no multiconfig
+is written for the top level product. Instead, a distinct multiconfig is
+written for each defined subproduct. The targets of the toplevel product can
+then pull any of the defined subproducts.
+
+All subproducts share the layer setup of their parent.
 
 [Sharing Files Between Products]: #sharing-files-between-products
 ## Sharing Files Between Products

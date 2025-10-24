@@ -912,6 +912,12 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
                 test-zeus:
                     default_version: zeus
 
+                test-parent:
+                    default_version: dunfell
+                    subproducts:
+                        subproductA: {{}}
+                        subproductB: {{}}
+
             modes:
                 modeA: {{}}
                 modeB: {{}}
