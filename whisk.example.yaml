@@ -298,3 +298,41 @@ products:
     conf: |
       MACHINE = "qemuarm"
       DISTRO = "poky"
+
+
+  parent:
+    # A product can have explict subproducts defined. This allows multiple
+    # independent products to be built with a single invocation. The caveat is
+    # that all the subproducts must share the same layers and version
+
+    # If a subproduct doesn't defined a description, it will inherit the parent description
+    description: Parent product
+
+    # All subproducts share the same layers
+    layers:
+      - oe-core
+
+    # All subproducts will have this conf fragment written into their multiconfig
+    conf: |
+      DISTRO = "poky"
+
+    targets:
+      - "mc:product-sub-qemux86-64:core-image-minimal"
+      - "mc:product-sub-qemuarm64:core-image-minimal"
+
+    # If subproducts are defined, the parent product does not get an
+    # multiconfig written (e.g. in this case, no "product-parent" multiconfig
+    # is created. If a parent product multiconfig is desired, it can be
+    # explicitly added as a subproduct key
+    subproducts:
+      sub-qemux86-64:
+        # subproducts may define addition conf fragments which will be written
+        # into their multiconfig conf file
+        conf: |
+          MACHINE = "qemux86-64"
+
+        # subproducts may override the descriptions
+        description: "A qemux86-64 sub product"
+
+      # Subproducts can also be empty
+      sub-qemuarm64: {}
