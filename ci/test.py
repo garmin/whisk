@@ -686,7 +686,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             configure --product=test-dunfell2
             """,
             {
-                "WHISK_PRODUCTS": "test-dunfell2",
+                "WHISK_CONF_PRODUCT": "test-dunfell2",
+                "WHISK_SUBPRODUCTS": "test-dunfell2",
                 "WHISK_VERSION": "default",
                 "WHISK_ACTUAL_VERSION": "dunfell",
             },
@@ -722,7 +723,7 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
         config_vars = {
             "WHISK_VERSION": "default",
             "WHISK_ACTUAL_VERSION": "dunfell",
-            "WHISK_PRODUCTS": "test-dunfell",
+            "WHISK_CONF_PRODUCT": "test-dunfell",
         }
         self.assertShellCode(
             """\
@@ -741,7 +742,7 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
         config_vars = {
             "WHISK_VERSION": "zeus",
             "WHISK_ACTUAL_VERSION": "zeus",
-            "WHISK_PRODUCTS": "test-dunfell",
+            "WHISK_CONF_PRODUCT": "test-dunfell",
         }
         self.assertShellCode(
             """\
@@ -766,7 +767,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_VERSION": "default",
                 "WHISK_ACTUAL_VERSION": "dunfell",
-                "WHISK_PRODUCTS": "test-dunfell",
+                "WHISK_SUBPRODUCTS": "test-dunfell",
+                "WHISK_CONF_PRODUCT": "test-dunfell",
             },
         )
         self.assertShellCode(
@@ -776,7 +778,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_VERSION": "default",
                 "WHISK_ACTUAL_VERSION": "zeus",
-                "WHISK_PRODUCTS": "test-zeus",
+                "WHISK_SUBPRODUCTS": "test-zeus",
+                "WHISK_CONF_PRODUCT": "test-zeus",
             },
         )
 
@@ -790,7 +793,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_VERSION": "dunfell",
                 "WHISK_ACTUAL_VERSION": "dunfell",
-                "WHISK_PRODUCTS": "test-dunfell",
+                "WHISK_SUBPRODUCTS": "test-dunfell",
+                "WHISK_CONF_PRODUCT": "test-dunfell",
             },
         )
         self.assertShellCode(
@@ -800,7 +804,8 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_VERSION": "default",
                 "WHISK_ACTUAL_VERSION": "zeus",
-                "WHISK_PRODUCTS": "test-zeus",
+                "WHISK_SUBPRODUCTS": "test-zeus",
+                "WHISK_CONF_PRODUCT": "test-zeus",
             },
         )
 
@@ -864,6 +869,7 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
                 "BB_ENV_EXTRAWHITE": {
                     "TEST_VAR",
                     "WHISK_ACTUAL_VERSION",
+                    "WHISK_CONF_PRODUCT",
                     "WHISK_MODE",
                     "WHISK_PRODUCTS",
                     "WHISK_PROJECT_ROOT",
@@ -884,6 +890,7 @@ class WhiskVersionTests(WhiskTests, unittest.TestCase):
                 "BB_ENV_PASSTHROUGH_ADDITIONS": {
                     "TEST_VAR",
                     "WHISK_ACTUAL_VERSION",
+                    "WHISK_CONF_PRODUCT",
                     "WHISK_MODE",
                     "WHISK_PRODUCTS",
                     "WHISK_PROJECT_ROOT",
@@ -972,7 +979,8 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_SITE": "siteA",
                 "WHISK_MODE": "modeA",
-                "WHISK_PRODUCTS": "test-dunfell",
+                "WHISK_SUBPRODUCTS": "test-dunfell",
+                "WHISK_CONF_PRODUCT": "test-dunfell",
             },
         )
 
@@ -984,7 +992,8 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_SITE": "siteB",
                 "WHISK_MODE": "modeB",
-                "WHISK_PRODUCTS": "test-zeus",
+                "WHISK_SUBPRODUCTS": "test-zeus",
+                "WHISK_CONF_PRODUCT": "test-zeus",
             },
         )
 
@@ -996,7 +1005,8 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_SITE": "siteB",
                 "WHISK_MODE": "modeB",
-                "WHISK_PRODUCTS": "test-zeus",
+                "WHISK_SUBPRODUCTS": "test-zeus",
+                "WHISK_CONF_PRODUCT": "test-zeus",
             },
         )
 
@@ -1017,7 +1027,8 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_SITE": "siteB",
                 "WHISK_MODE": "modeB",
-                "WHISK_PRODUCTS": "test-zeus",
+                "WHISK_SUBPRODUCTS": "test-zeus",
+                "WHISK_CONF_PRODUCT": "test-zeus",
             },
         )
 
@@ -1029,7 +1040,8 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_SITE": "siteA",
                 "WHISK_MODE": "modeA",
-                "WHISK_PRODUCTS": "test-dunfell",
+                "WHISK_SUBPRODUCTS": "test-dunfell",
+                "WHISK_CONF_PRODUCT": "test-dunfell",
             },
         )
 
@@ -1042,7 +1054,8 @@ class WhiskInitTests(WhiskTests, unittest.TestCase):
             {
                 "WHISK_SITE": "siteB",
                 "WHISK_MODE": "modeB",
-                "WHISK_PRODUCTS": "test-zeus",
+                "WHISK_SUBPRODUCTS": "test-zeus",
+                "WHISK_CONF_PRODUCT": "test-zeus",
             },
         )
 

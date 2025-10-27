@@ -175,33 +175,46 @@ use pyrex when invoking your build commands.
 ## Build Variables
 
 Whisk sets a number of bitbake variables that can be used in recipes to make
-they aware of the current user configuration. These are:
+they aware of the current user configuration. There are two classes of
+variables that are made available. The first are variables that are only
+available in a given product multiconfig. These are:
+
+| Variable | Description |
+|----------|-------------|
+| `WHISK_CURRENT_PRODUCT` | The (sub)product in the current multiconfig. When evaluated in a product multiconfig, it will be the name of the product. In the base environment, it will be `"core"` |
+| `WHISK_PRODUCT` | A *deprecated* alias for `WHISK_CURRENT_PRODUCT` |
+| `WHISK_CURRENT_PRODUCT_DESCRIPTION` | The description of the current (sub)product. Only set in the product multiconfig |
+| `WHISK_PRODUCT_DESCRIPTION` | A *deprecated* alias for `WHISK_CURRENT_PRODUCT_DESCRIPTION` |
+
+The second set of variables are defined globally and thus available all the
+time. This includes:
 
 | Variable | Description |
 |----------|-------------|
 | `WHISK_PROJECT_ROOT` | The absolute path the to the project root |
-| `WHISK_PRODUCT` | The product in the current multiconfig. When evaluated in a product multiconfig, it will be the name of the product. In the base environment, it will be `"core"` |
-| `WHISK_PRODUCT_DESCRIPTION` | The description of the current product. Only set in the product multiconfig |
-| `WHISK_PRODUCTS` | The name of the product the user has currently selected. Unlike `WHISK_PRODUCT`, the value of this variable doesn't change per-multiconfig |
+| `WHISK_CONF_PRODUCT` | The name of the product the user selected to build. |
+| `WHISK_SUBPRODUCTS` | The name of all subproducts selected to build. If a product has no subproducts, then this is the name of the parent product |
+| `WHISK_PRODUCTS` | A *deprecated* alias for `WHISK_SUBPRODUCTS` |
 | `WHISK_MODE` | The name of the mode the user has currently selected |
 | `WHISK_SITE` | The name of the site the user has currently selected |
 | `WHISK_VERSION` | The name of the version the user has currently selected. May be `"default"` if the user specified that |
 | `WHISK_ACTUAL_VERSION` | the name of the version the user has specified, resolved to an actual name (e.g. will never be `"default"` |
 | `WHISK_TARGETS` | The default build targets for the currently configured product |
 
-In addition, some variables are set for each defined product. In this table
-`${product}` will be replaced with the actual name of the product:
+In addition, some variables are globally set for each defined (sub)product. In
+this table `${product}` will be replaced with the actual name of the
+(sub)product:
 
 | Variable | Description |
 |----------|-------------|
-| `WHISK_TARGET_${product}` | The default targets for this product |
-| `WHISK_DEPLOY_DIR_${product}` | The [DEPLOY_DIR][] for this product (see [Sharing Files Between Products][]) |
+| `WHISK_TARGET_${product}` | The default targets for this (sub)product |
+| `WHISK_DEPLOY_DIR_${product}` | The [DEPLOY_DIR][] for this (sub)product (see [Sharing Files Between Products][]) |
 | `DEPLOY_DIR_${product}` | *Deprecated* Alias for `WHISK_DEPLOY_DIR_${product}`, only available when config file version is `1`. New products should not use this variable as it can cause problems with overrides. |
 
 Finally, some variables are also set in the shell environment when the hook
-scripts are run. These include `WHISK_PROJECT_ROOT`, `WHISK_PRODUCTS`,
-`WHISK_MODE`, `WHISK_SITE`, `WHISK_VERSION`, `WHISK_ACTUAL_VERSION`, and the
-variables in the following tables:
+scripts are run. These include `WHISK_PROJECT_ROOT`, `WHISK_CONF_PRODUCTS`,
+`WHISK_PRODUCTS`, `WHISK_MODE`, `WHISK_SITE`, `WHISK_VERSION`,
+`WHISK_ACTUAL_VERSION`, and the variables in the following tables:
 
 | Variable | Description |
 |----------|-------------|
