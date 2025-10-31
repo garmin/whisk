@@ -261,6 +261,20 @@
                                 "type": "string"
                             }
                         },
+                        "subproducts": {
+                            "type": "object",
+                            "patternProperties": {
+                                "^(?!core$)[a-zA-Z0-9_-]+$": {
+                                    "type": "object",
+                                    "properties": {
+                                        "description": { "type": "string" },
+                                        "conf": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        },
                         "conf": {
                             "type": "string"
                         },

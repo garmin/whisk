@@ -18,12 +18,17 @@
 inherit build-alias
 
 PRODUCT ?= ""
+CURRENT_PRODUCT ?= ""
 
 python() {
     product = d.getVar('PRODUCT')
-    if not product:
-        raise bb.parse.SkipRecipe('PRODUCT not defined')
-
-    if product != d.getVar('WHISK_PRODUCTS'):
+    if product and product != d.getVar('WHISK_CONF_PRODUCT'):
         raise bb.parse.SkipRecipe('Product %s not configured' % product)
+
+    current_product= d.getVar('CURRENT_PRODUCT')
+    if current_product and current_product != d.getVar('WHISK_CURRENT_PRODUCT'):
+        raise bb.parse.SkipRecipe('Current product is not %s' % current_product)
+
+    if not product and not current_product:
+        raise bb.parse.SkipRecipe('PRODUCT and CURRENT_PRODUCT not defined')
 }
