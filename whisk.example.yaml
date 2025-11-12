@@ -138,6 +138,11 @@ versions:
         # ignores anything in this field (optional)
         tags: {}
 
+        # A fragment that will be written into bblayers.conf when this layer set
+        # is enabled
+        layerconf: |
+          # Layer conf placeholder
+
       - name: mingw
         paths:
           - "%{WHISK_PROJECT_ROOT}/layers/dunfell/meta-mingw"
