@@ -127,6 +127,9 @@
                                             "type": "string"
                                         }
                                     },
+                                    "layerconf": {
+                                        "type": "string"
+                                    },
                                     "fetch": {
                                         "$ref": "#/definitions/fetch"
                                     }

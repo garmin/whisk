@@ -729,6 +729,8 @@ def configure(sys_args):
                         f.write('BBLAYERS += "%s"\n' % p)
                     for m in l.get("bbmask", []):
                         f.write('BBMASK += "%s"\n' % m)
+                    f.write(l.get("layerconf", ""))
+                    f.write("\n")
 
             f.write('BBLAYERS += "%s/meta-whisk"\n\n' % THIS_DIR)
 
