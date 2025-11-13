@@ -244,7 +244,7 @@ def parse_conf_file(path):
 
 def configure(sys_args):
     parser = argparse.ArgumentParser(description="Configure build")
-    parser.add_argument("--product", help="Change build product")
+    parser.add_argument("--product", "--products", help="Change build product")
     parser.add_argument("--mode", help="Change build mode")
     parser.add_argument("--site", help="Change build site")
     parser.add_argument("--version", help="Set Yocto version")
