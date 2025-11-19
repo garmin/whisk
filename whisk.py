@@ -708,6 +708,15 @@ def configure(sys_args):
 
             f.write(conf.get("core", {}).get("conf", ""))
             f.write("\n")
+            for l in version.get("layers", []):
+                if l["name"] in requested_layers and l["name"] not in conf.get(
+                    "core", {}
+                ).get("layers", []):
+                    for p in l.get("paths", []):
+                        f.write('BBMASK_core += "%s"\n' % p)
+            f.write(
+                "BBMASK += \"${@d.getVar('BBMASK_core') if d.getVar('WHISK_CURRENT_PRODUCT') == 'core' else ''}\"\n"
+            )
 
             # If the selected whisk product is not using multiconfig, then
             # force all the configuration bits Whisk would normally assign
