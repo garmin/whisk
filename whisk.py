@@ -158,6 +158,7 @@ def print_items(items, is_current, extra=[]):
                     get_current(i),
                     i,
                     items[i].get("description", ""),
+                    items[i].get("default_version") or "",
                 )
                 for i in sorted(items)
             ]
