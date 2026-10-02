@@ -15,6 +15,9 @@
 # limitations under the License.
 
 import os
+import importlib.util
+import io
+from contextlib import redirect_stdout
 import pathlib
 import shutil
 import subprocess
@@ -24,6 +27,22 @@ import unittest
 import yaml
 
 ROOT = pathlib.Path(__file__).parent.parent.absolute()
+
+
+class ParseConfTests(unittest.TestCase):
+    def test_missing_version(self):
+        spec = importlib.util.spec_from_file_location("whisk", ROOT / "whisk.py")
+        whisk = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(whisk)
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "whisk.yaml"
+            path.write_text("products: {}\n")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                result = whisk.parse_conf_file(path)
+            self.assertEqual(result, (None, None))
+            self.assertIn(str(path), output.getvalue())
+            self.assertIn("missing version", output.getvalue())
 
 
 class WhiskTests(object):
