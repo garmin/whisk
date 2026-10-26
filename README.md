@@ -303,12 +303,12 @@ looks like this:
     path = whisk
     branch = master
     url = https://github.com/garmin/whisk.git
-[submodule "yocto-3.0/zeus"]
+[submodule "yocto-3.0/poky"]
     path = yocto-3.0/poky
     branch = zeus
     url = https://git.yoctoproject.org/git/poky
 [submodule "yocto-3.0/meta-mingw"]
-    path = yocto-3.1/meta-mingw
+    path = yocto-3.0/meta-mingw
     branch = zeus
     url = https://git.yoctoproject.org/git/meta-mingw
 [submodule "yocto-3.1/poky"]
@@ -324,6 +324,7 @@ looks like this:
 And a `whisk.yaml` file that looks like this:
 
 ```yaml
+---
 version: 1
 
 defaults:
@@ -336,46 +337,46 @@ versions:
     oeinit: "%{WHISK_PROJECT_ROOT}/yocto-3.1/poky/oe-init-build-env"
 
     layers:
-    - name: core
-      paths:
-      - "%{WHISK_PROJECT_ROOT}/yocto-3.1/poky/meta"
-      fetch:
-        commands:
-        - git submodule update --init yocto-3.1/poky
+      - name: core
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/yocto-3.1/poky/meta"
+        fetch:
+          commands:
+            - git submodule update --init yocto-3.1/poky
 
-    - name: mingw
-      paths:
-      - "%{WHISK_PROJECT_ROOT}/yocto-3.1/meta-mingw"
-      fetch:
-        commands:
-        - git submodule update --init yocto-3.1/meta-mingw
+      - name: mingw
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/yocto-3.1/meta-mingw"
+        fetch:
+          commands:
+            - git submodule update --init yocto-3.1/meta-mingw
 
   zeus:
     description: Yocto 3.0
     oeinit: "%{WHISK_PROJECT_ROOT}/yocto-3.0/poky/oe-init-build-env"
 
     layers:
-    - name: core
-      paths:
-      - "%{WHISK_PROJECT_ROOT}/yocto-3.0/poky/meta"
-      fetch:
-        commands:
-        - git submodule update --init yocto-3.0/poky
+      - name: core
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/yocto-3.0/poky/meta"
+        fetch:
+          commands:
+            - git submodule update --init yocto-3.0/poky
 
-    - name: mingw
-      paths:
-      - "%{WHISK_PROJECT_ROOT}/yocto-3.0/meta-mingw"
-      fetch:
-        commands:
-        - git submodule update --init yocto-3.0/meta-mingw
+      - name: mingw
+        paths:
+          - "%{WHISK_PROJECT_ROOT}/yocto-3.0/meta-mingw"
+        fetch:
+          commands:
+            - git submodule update --init yocto-3.0/meta-mingw
 
 modes:
   default:
-  desription: Default mode
+    description: Default mode
 
 sites:
   default:
-  description: Default site
+    description: Default site
 
 core:
   layers:
@@ -387,26 +388,26 @@ core:
 
 products:
   albatross:
-    default_verison: dunfell
+    default_version: dunfell
     layers:
-    - core
+      - core
 
   typhoon:
     default_version: dunfell
     layers:
-    - core
-    - mingw
+      - core
+      - mingw
 
   phoenix:
     default_version: zeus
     layers:
-    - core
+      - core
 
   eagle:
     default_version: zeus
     layers:
-    - core
-    - mingw
+      - core
+      - mingw
 ```
 
 Now, when a product is configured with the `--fetch` argument, whisk will
