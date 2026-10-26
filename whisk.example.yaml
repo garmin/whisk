@@ -307,6 +307,9 @@ products:
     # If a subproduct doesn't defined a description, it will inherit the parent description
     description: Parent product
 
+    # All subproducts share the same version
+    default_version: dunfell
+
     # All subproducts share the same layers
     layers:
       - oe-core
