@@ -28,7 +28,6 @@ defaults:
   # omitted, the user *must* specify them the first time they configure. Note
   # that the default version is not configurable because it defaults to
   # "default".
-  products: []
   mode: release
   site: roaming
   # Default build directory, or "build" if unspecified
