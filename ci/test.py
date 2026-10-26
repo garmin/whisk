@@ -307,6 +307,18 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
                         dictionary:
                             key1: "A"
                             key2: "B"
+                    layers:
+                      - name: layer
+                        tags:
+                            string: "bar"
+                            number: 123
+                            array:
+                              - 1
+                              - 2
+                              - 3
+                            dictionary:
+                                key1: "A"
+                                key2: "B"
 
             products:
                 test-dunfell:

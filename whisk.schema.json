@@ -132,6 +132,9 @@
                                     },
                                     "fetch": {
                                         "$ref": "#/definitions/fetch"
+                                    },
+                                    "tags": {
+                                        "type": "object"
                                     }
                                 },
                                 "additionalProperties": false,
