@@ -236,12 +236,12 @@
                                     "email": {
                                         "type": "string"
                                     }
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": [
-                                "name"
-                            ]
+                                },
+                                "additionalProperties": false,
+                                "required": [
+                                    "name"
+                                ]
+                            }
                         },
                         "default_version": {
                             "type": "string"

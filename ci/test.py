@@ -315,6 +315,48 @@ class WhiskConfParseTests(WhiskTests, unittest.TestCase):
             """
         )
 
+    def test_maintainers_invalid(self):
+        for maintainer in (
+            "email: john.doe@company.com",
+            "{name: John Doe, phone: 555-0100}",
+        ):
+            with self.subTest(maintainer=maintainer):
+                self.write_conf(
+                    """
+                    version: 2
+                    defaults:
+                        product: test-dunfell
+                        mode: mode
+                        site: site
+
+                    versions:
+                        dunfell:
+                            oeinit: {ROOT}/ci/dummy-init
+
+                    products:
+                        test-dunfell:
+                            maintainers:
+                                - {MAINTAINER}
+                            default_version: dunfell
+
+                    modes:
+                        mode: {{}}
+
+                    sites:
+                        site: {{}}
+
+                    """.format(
+                        ROOT=ROOT, MAINTAINER=maintainer
+                    )
+                )
+
+                self.assertShellCode(
+                    """\
+                    . init-build-env
+                    """,
+                    success=False,
+                )
+
     def test_tags(self):
         self.write_conf(
             """\
