@@ -160,6 +160,37 @@ class WhiskCommandTests(WhiskTests, unittest.TestCase):
             p.returncode, 0, "Unable to invoke whisk:\n%s" % p.stdout.decode("utf-8")
         )
 
+    def test_validate_schema_error(self):
+        def validate():
+            return subprocess.run(
+                [ROOT / "bin" / "whisk", "validate", self.conf_file],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+
+        # The conf passes yamllint, so only the schema check can fail it
+        self.write_conf(
+            """\
+            ---
+            version: 2
+            versions:
+                dunfell:
+                    oeinit: {ROOT}/ci/dummy-init
+            """.format(
+                ROOT=ROOT
+            )
+        )
+        p = validate()
+        self.assertEqual(
+            p.returncode, 0, "Validation failed with:\n%s" % p.stdout.decode("utf-8")
+        )
+
+        self.append_conf("unknown_key: 1\n")
+        p = validate()
+        self.assertNotEqual(
+            p.returncode, 0, "Validation passed with:\n%s" % p.stdout.decode("utf-8")
+        )
+
 
 class WhiskConfParseTests(WhiskTests, unittest.TestCase):
     def setUp(self):

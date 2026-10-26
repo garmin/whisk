@@ -841,7 +841,6 @@ def validate(args):
         )
     )
 
-    ret = 0
     with args.conf.open("r") as f:
         for p in yamllint.linter.run(f, config, str(args.conf)):
             print("%r" % p)
