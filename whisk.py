@@ -196,7 +196,7 @@ def parse_conf_file(path):
     conf = yaml.load(conf_str, Loader=yaml.Loader)
 
     if not "version" in conf:
-        print("Config file '%s' missing version" % sys_args.conf)
+        print("Config file '%s' missing version" % path)
         return (None, None)
 
     if conf["version"] < 1 or conf["version"] > 2:
